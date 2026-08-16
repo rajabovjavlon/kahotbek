@@ -22,13 +22,15 @@ const SHAPES = [
   { shape: '■', color: '#059669', name: 'Yashil' },
 ];
 
+const FLOATING_EMOJIS = ['🔥', '👏', '😂', '⚡', '😎', '🚀', '🎯', '🎉'];
+
 export default function GamePlayView({
   quiz,
   players = [],
   user,
   roomPin = '',
   isSpectator = false,
-  gameMode = 'race', // 'race' or 'teams'
+  gameMode = 'race', // 'race' or 'teams' or 'classic'
   onFinishGame
 }) {
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -36,7 +38,7 @@ export default function GamePlayView({
   const [introCount, setIntroCount] = useState(3);
   
   const currentQuestion = quiz.questions[currentQIndex] || quiz.questions[0];
-  const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 20);
+  const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 15);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
@@ -44,6 +46,7 @@ export default function GamePlayView({
   const [maxStreak, setMaxStreak] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const [floatingReactions, setFloatingReactions] = useState([]);
   
   // Track Steps (Yo'lda yurish 1 qadam)
   const [myStep, setMyStep] = useState(0);
@@ -65,7 +68,7 @@ export default function GamePlayView({
   const equippedTrailId = user.equippedTrail || 'trail_fire';
   const currentTrailItem = SHOP_ITEMS.find(it => it.id === equippedTrailId) || SHOP_ITEMS[0];
 
-  // Socket listener for other players' steps on the track
+  // Socket listener for other players' steps and floating emoji reactions
   useEffect(() => {
     const handlePlayerStep = (data) => {
       setPlayerSteps((prev) => ({
@@ -88,12 +91,46 @@ export default function GamePlayView({
       }, 2000);
     };
 
+    const handleLiveReaction = (reaction) => {
+      soundManager.playReaction();
+      setFloatingReactions(prev => [...prev.slice(-15), reaction]);
+      setTimeout(() => {
+        setFloatingReactions(prev => prev.filter(r => r.id !== reaction.id));
+      }, 2500);
+    };
+
     socket.on('player_stepped_forward', handlePlayerStep);
+    socket.on('live_reaction', handleLiveReaction);
 
     return () => {
       socket.off('player_stepped_forward', handlePlayerStep);
+      socket.off('live_reaction', handleLiveReaction);
     };
   }, []);
+
+  const handleSendReaction = (emoji) => {
+    soundManager.playReaction();
+    const newReaction = {
+      id: `react_${Date.now()}_${Math.random()}`,
+      emoji,
+      senderName: user.name,
+      avatar: user.avatar
+    };
+
+    setFloatingReactions(prev => [...prev.slice(-15), newReaction]);
+    setTimeout(() => {
+      setFloatingReactions(prev => prev.filter(r => r.id !== newReaction.id));
+    }, 2500);
+
+    if (roomPin) {
+      socket.emit('send_reaction', {
+        pin: roomPin,
+        emoji,
+        senderName: user.name,
+        avatar: user.avatar
+      });
+    }
+  };
 
   // 1. Intro 3-2-1 countdown
   useEffect(() => {
@@ -649,6 +686,83 @@ export default function GamePlayView({
             );
           })}
         </div>
+
+        {/* Bottom Floating Reaction Bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#121826',
+          border: '1px solid #1e283d',
+          borderRadius: '14px',
+          padding: '8px 16px',
+          flexWrap: 'wrap',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>
+            <span>⚡ Jonli Reaksiyalar:</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {FLOATING_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleSendReaction(emoji)}
+                style={{
+                  fontSize: '20px',
+                  background: '#182234',
+                  border: '1px solid #222d42',
+                  borderRadius: '10px',
+                  padding: '5px 10px',
+                  transition: 'transform 0.12s ease, background 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.25)';
+                  e.currentTarget.style.background = '#222d42';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = '#182234';
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Reaction Emojis Layer during GamePlay */}
+      <div style={{
+        position: 'fixed',
+        bottom: '90px',
+        right: '40px',
+        pointerEvents: 'none',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column-reverse',
+        gap: '12px'
+      }}>
+        {floatingReactions.map((item) => (
+          <div
+            key={item.id}
+            className="anim-pop"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(18, 24, 38, 0.94)',
+              border: '1px solid #2f3e5c',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              animation: 'floatUpAnim 2.4s ease-out forwards'
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>{item.emoji}</span>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#f8fafc' }}>{item.senderName}</span>
+          </div>
+        ))}
       </div>
 
       {/* RIGHT: LIVE REAL-TIME CHAT SIDEBAR */}

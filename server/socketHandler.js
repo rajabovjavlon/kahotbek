@@ -212,16 +212,60 @@ export function setupSocketHandlers(io) {
       io.to(roomPin).emit('chat_message_deleted', { messageId });
     });
 
+    // 5.1 LIVE FLOATING EMOJI REACTIONS
+    socket.on('send_reaction', ({ pin, emoji, senderName, avatar }) => {
+      const roomPin = String(pin).trim();
+      if (!roomPin || !emoji) return;
+
+      io.to(roomPin).emit('live_reaction', {
+        id: `react_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        emoji,
+        senderName: sanitizeText(senderName || 'O\'yinchi', 20),
+        avatar: avatar || '🔥'
+      });
+    });
+
+    // 5.2 HOST UPDATES ROOM SETTINGS (Question Count, Time Limit, Shuffle, Mode)
+    socket.on('update_room_settings', ({ pin, hostSecret, settings }) => {
+      const room = rooms.get(String(pin).trim());
+      if (!room || room.hostSecret !== hostSecret) return;
+
+      room.settings = {
+        questionCount: settings.questionCount || 'all',
+        timeLimit: settings.timeLimit || 15,
+        shuffle: settings.shuffle !== false,
+        mode: settings.mode || room.mode || 'race'
+      };
+
+      if (settings.mode) {
+        room.mode = settings.mode;
+      }
+
+      io.to(room.pin).emit('room_settings_updated', {
+        settings: room.settings
+      });
+    });
+
     // 6. HOST STARTS GAME
-    socket.on('host_start_game', ({ pin, hostSecret }) => {
+    socket.on('host_start_game', ({ pin, hostSecret, customizedQuestions }) => {
       const room = rooms.get(pin);
       if (!room || room.hostSecret !== hostSecret) return;
+
+      if (customizedQuestions && Array.isArray(customizedQuestions) && customizedQuestions.length > 0) {
+        room.quiz.questions = customizedQuestions;
+      }
 
       room.phase = 'intro';
       room.currentQIndex = 0;
 
       io.to(pin).emit('game_started', {
-        totalQuestions: room.quiz.questions.length
+        totalQuestions: room.quiz.questions.length,
+        quiz: {
+          title: room.quiz.title,
+          category: room.quiz.category,
+          icon: room.quiz.icon,
+          questions: room.quiz.questions
+        }
       });
 
       setTimeout(() => {

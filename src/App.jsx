@@ -15,6 +15,7 @@ import ProfileView from './views/ProfileView';
 import { DEFAULT_QUIZZES } from './data/defaultQuizzes';
 import { soundManager } from './utils/sounds';
 import { socket } from './utils/socket';
+import { translations } from './utils/translations';
 
 export default function App() {
   // 1. User state with inventory & equipped effects
@@ -65,11 +66,24 @@ export default function App() {
 
   const allQuizzes = [...customQuizzes, ...DEFAULT_QUIZZES];
 
-  // 3. Navigation & Modals
+  // 3. Navigation & Modals & Settings (Language, Theme, Audio)
   const [currentTab, setCurrentTab] = useState('home');
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [lang, setLang] = useState(() => localStorage.getItem('kahotbek_lang') || 'uz');
+  const [theme, setTheme] = useState(() => localStorage.getItem('kahotbek_theme') || 'dark');
+
+  useEffect(() => {
+    localStorage.setItem('kahotbek_lang', lang);
+  }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('kahotbek_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const t = translations[lang] || translations.uz;
 
   // 4. Active Room & Socket Session
   const [activeQuiz, setActiveQuiz] = useState(DEFAULT_QUIZZES[0]);
@@ -92,8 +106,14 @@ export default function App() {
       setLobbyPlayers(players);
     });
 
-    socket.on('game_started', () => {
+    socket.on('game_started', (data) => {
       soundManager.playStartGame();
+      if (data && data.quiz) {
+        setActiveQuiz(prev => ({
+          ...prev,
+          ...data.quiz
+        }));
+      }
       setCurrentTab('gameplay');
     });
 
@@ -174,10 +194,21 @@ export default function App() {
     setCurrentTab('gameplay');
   };
 
-  // 4. Host starts game
-  const handleStartGameFromLobby = () => {
+  // 4. Host starts game with customized questions (5, 10, 15, 20, 30, 40, 50, all)
+  const handleStartGameFromLobby = (customizedQuestions, settings) => {
+    if (customizedQuestions && Array.isArray(customizedQuestions)) {
+      setActiveQuiz(prev => ({
+        ...prev,
+        questions: customizedQuestions
+      }));
+    }
+
     if (hostSecret) {
-      socket.emit('host_start_game', { pin: roomPin, hostSecret });
+      socket.emit('host_start_game', { 
+        pin: roomPin, 
+        hostSecret,
+        customizedQuestions 
+      });
     }
     setCurrentTab('gameplay');
   };
@@ -230,7 +261,14 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0b0f19' }}>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'var(--bg-main)',
+      color: 'var(--text-main)',
+      transition: 'background-color 0.2s ease, color 0.2s ease'
+    }}>
       {/* Top Navbar */}
       {currentTab !== 'gameplay' && (
         <Navbar
@@ -241,6 +279,10 @@ export default function App() {
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           isMuted={isMuted}
           setIsMuted={setIsMuted}
+          lang={lang}
+          setLang={setLang}
+          theme={theme}
+          setTheme={setTheme}
         />
       )}
 
@@ -250,6 +292,8 @@ export default function App() {
           <HomeView
             quizzes={allQuizzes}
             user={user}
+            lang={lang}
+            theme={theme}
             onPlaySolo={handlePlaySolo}
             onHostLobby={handleHostLobby}
             onOpenJoinModal={() => setIsJoinModalOpen(true)}
@@ -265,6 +309,8 @@ export default function App() {
         {currentTab === 'explore' && (
           <ExploreView
             quizzes={allQuizzes}
+            lang={lang}
+            theme={theme}
             onPlaySolo={handlePlaySolo}
             onHostLobby={handleHostLobby}
           />
@@ -273,6 +319,8 @@ export default function App() {
         {currentTab === 'shop' && (
           <ShopView
             user={user}
+            lang={lang}
+            theme={theme}
             onUpdateUser={setUser}
           />
         )}
@@ -280,6 +328,8 @@ export default function App() {
         {currentTab === 'create' && (
           <CreateQuizView
             initialQuiz={editingQuiz}
+            lang={lang}
+            theme={theme}
             onSaveQuiz={handleSaveQuiz}
             onSaveAndPlay={handleSaveAndPlay}
           />
@@ -292,6 +342,8 @@ export default function App() {
             players={lobbyPlayers}
             isHost={isHost}
             user={user}
+            lang={lang}
+            theme={theme}
             onStartGame={handleStartGameFromLobby}
             onLeaveLobby={() => setCurrentTab('home')}
             onRemovePlayer={(id) => setLobbyPlayers(prev => prev.filter(p => p.id !== id))}
@@ -303,6 +355,8 @@ export default function App() {
             quiz={activeQuiz}
             players={lobbyPlayers}
             user={user}
+            lang={lang}
+            theme={theme}
             roomPin={roomPin}
             isSpectator={isSpectator}
             onFinishGame={handleFinishGame}
@@ -314,6 +368,8 @@ export default function App() {
             quiz={activeQuiz}
             finalScores={finalScores}
             user={user}
+            lang={lang}
+            theme={theme}
             onPlayAgain={() => handlePlaySolo(activeQuiz)}
             onGoHome={() => setCurrentTab('home')}
             onGoExplore={() => setCurrentTab('explore')}
@@ -321,13 +377,15 @@ export default function App() {
         )}
 
         {currentTab === 'leaderboard' && (
-          <LeaderboardView user={user} />
+          <LeaderboardView user={user} lang={lang} theme={theme} />
         )}
 
         {currentTab === 'profile' && (
           <ProfileView
             user={user}
             myQuizzes={customQuizzes}
+            lang={lang}
+            theme={theme}
             onPlaySolo={handlePlaySolo}
             onHostLobby={handleHostLobby}
             onEditQuiz={handleEditQuiz}
@@ -344,21 +402,22 @@ export default function App() {
       {/* Footer */}
       {currentTab !== 'gameplay' && (
         <footer style={{
-          borderTop: '1px solid #1e283d',
-          background: '#0e1422',
+          borderTop: '1px solid var(--border-subtle)',
+          background: 'var(--bg-surface)',
           padding: '20px',
           textAlign: 'center',
-          color: '#64748b',
-          fontSize: '13px'
+          color: 'var(--text-muted)',
+          fontSize: '13px',
+          transition: 'background-color 0.2s ease, border-color 0.2s ease'
         }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src="/logo.png" alt="Kahotbek" style={{ width: '22px', height: '22px', objectFit: 'contain', borderRadius: '4px' }} />
-              <span style={{ fontWeight: '800', color: '#f8fafc' }}>KAHOTBEK</span>
-              <span>— O'zbekistondagi №1 Interaktiv Real-Time Viktorina & Poyga Platformasi</span>
+              <span style={{ fontWeight: '800', color: 'var(--text-main)' }}>KAHOTBEK</span>
+              <span>{t.footerCopyright}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ color: '#10b981', fontWeight: '700' }}>🛡️ 100% Himoyalangan</span>
+              <span style={{ color: '#10b981', fontWeight: '700' }}>{t.footerSecured}</span>
               <span>•</span>
               <a href="https://t.me/kahotbekbot" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '700' }}>
                 @kahotbekbot
@@ -373,6 +432,7 @@ export default function App() {
         isOpen={isJoinModalOpen}
         onClose={() => setIsJoinModalOpen(false)}
         onJoinGame={handleJoinGameFromPin}
+        lang={lang}
       />
 
       <AuthModal
@@ -380,7 +440,9 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         user={user}
         onUpdateUser={setUser}
+        lang={lang}
       />
     </div>
   );
 }
+

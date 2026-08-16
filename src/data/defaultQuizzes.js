@@ -4,7 +4,7 @@ export const DEFAULT_QUIZZES = [
   {
     id: "quiz-it-js",
     title: "JavaScript & Zamonaviy Web Dasturlash",
-    description: "Frontend dasturchilar uchun JavaScript, React va zamonaviy web texnologiyalari bo'yicha qizg'in intellektual jang!",
+    description: "Frontend dasturchilar uchun JavaScript, React, TypeScript va zamonaviy web texnologiyalari bo'yicha qizg'in intellektual jang!",
     category: "Dasturlash",
     categoryColor: "#3b82f6",
     difficulty: "O'rta",
@@ -16,9 +16,9 @@ export const DEFAULT_QUIZZES = [
     icon: "💻",
     questions: [
       {
-        id: "q1",
+        id: "js1",
         question: "JavaScriptda `typeof null` natijasi nima chiqadi?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "Bu JavaScriptning tarixiy xatolaridan (legacy bug) biri bo'lib, `null` ning turi 'object' deb qaytadi.",
@@ -30,7 +30,7 @@ export const DEFAULT_QUIZZES = [
         ]
       },
       {
-        id: "q2",
+        id: "js2",
         question: "Reactda komponent holatini saqlash uchun qaysi asosiy Hook ishlatiladi?",
         timeLimit: 15,
         points: 1000,
@@ -44,10 +44,10 @@ export const DEFAULT_QUIZZES = [
         ]
       },
       {
-        id: "q3",
+        id: "js3",
         question: "JavaScriptda `['10', '10', '10'].map(parseInt)` natijasi nima bo'ladi?",
-        timeLimit: 25,
-        points: 2000,
+        timeLimit: 20,
+        points: 1500,
         type: "multiple",
         explanation: "parseInt(val, index) chaqiriladi: parseInt('10',0)=10, parseInt('10',1)=NaN, parseInt('10',2)=2. Natija: [10, NaN, 2].",
         options: [
@@ -58,19 +58,19 @@ export const DEFAULT_QUIZZES = [
         ]
       },
       {
-        id: "q4",
+        id: "js4",
         question: "`const` bilan e'lon qilingan massivga yangi element qo'shish mumkinmi?",
         timeLimit: 15,
         points: 1000,
         type: "boolean",
-        explanation: "Ha, chunki `const` o'zgaruvchi havolasini o'zgartirishni taqiqlaydi, lekin massiv ichidagi obyekt/elementlarni modifikatsiya qilish mumkin.",
+        explanation: "Ha, chunki `const` o'zgaruvchi havolasini o'zgartirishni taqiqlaydi, lekin massiv ichidagi elementlarni modifikatsiya qilish mumkin.",
         options: [
           { text: "HA (Mumkin)", isCorrect: true, color: "#22c55e", shape: "square" },
           { text: "YO'Q (Xato beradi)", isCorrect: false, color: "#ef4444", shape: "triangle" }
         ]
       },
       {
-        id: "q5",
+        id: "js5",
         question: "CSS Grid va Flexbox o'rtasidagi asosiy farq nimada?",
         timeLimit: 20,
         points: 1000,
@@ -81,6 +81,76 @@ export const DEFAULT_QUIZZES = [
           { text: "Grid faqat mobil uchun ishlaydi", isCorrect: false, color: "#3b82f6", shape: "diamond" },
           { text: "Flexbox eskirgan, faqat Grid ishlatiladi", isCorrect: false, color: "#eab308", shape: "circle" },
           { text: "Hech qanday farqi yo'q", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "js6",
+        question: "JavaScriptda `==` va `===` operatorlari o'rtasidagi asosiy farq nima?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "`==` faqat qiymatni tekshiradi va type coercion qiladi, `===` esa qiymat bilan birga ma'lumot turini (type) ham qat'iy tekshiradi.",
+        options: [
+          { text: "Farqi yo'q", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "`===` qiymat va ma'lumot turini qat'iy tekshiradi", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "`==` tezroq ishlaydi", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "`===` faqat sonlarni tekshiradi", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "js7",
+        question: "Event Loop (Hodisalar tsikli)da qaysi navbat birinchi bajariladi: Microtask yoki Macrotask?",
+        timeLimit: 20,
+        points: 1500,
+        type: "multiple",
+        explanation: "Microtasklar (masalan, Promise.then, queueMicrotask) Macrotasklardan (setTimeout, setInterval) oldin bajariladi.",
+        options: [
+          { text: "Microtask (Promise)", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "Macrotask (setTimeout)", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Ikkalasi bir vaqtda", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "Tasodifiy", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+        ]
+      },
+      {
+        id: "js8",
+        question: "TypeScriptda `any` va `unknown` tiplari o'rtasidagi farq nimada?",
+        timeLimit: 20,
+        points: 1500,
+        type: "multiple",
+        explanation: "`unknown` turi `any` ga qaraganda xavfsizroq bo'lib, uning ustida amal bajarishdan oldin turini tekshirish (type check) talab etiladi.",
+        options: [
+          { text: "`unknown` turini tekshirishni talab qiladi (xavfsizroq)", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "`any` xavfsizroq", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Hech qanday farqi yo'q", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "`unknown` faqat string qabul qiladi", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "js9",
+        question: "JavaScriptda `0.1 + 0.2 === 0.3` ifodasi nima qaytaradi?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "IEEE 754 suzuvchi nuqta standarti tufayli `0.1 + 0.2 = 0.30000000000000004` bo'ladi, natijada `false` qaytadi.",
+        options: [
+          { text: "true", isCorrect: false, color: "#22c55e", shape: "square" },
+          { text: "false", isCorrect: true, color: "#ef4444", shape: "triangle" },
+          { text: "undefined", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "NaN", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+        ]
+      },
+      {
+        id: "js10",
+        question: "Reactda komponent qayta chizilishini (re-render) oldini olish uchun qaysi HOC ishlatiladi?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "`React.memo` prop'lar o'zgarmagan holatda komponentni keraksiz qayta render bo'lishidan saqlaydi.",
+        options: [
+          { text: "React.memo", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "React.lazy", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "React.useState", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "React.Fragment", isCorrect: false, color: "#eab308", shape: "circle" }
         ]
       }
     ]
@@ -102,7 +172,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "ai1",
         question: "GPT qisqartmasi nimani anglatadi?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "GPT - Generative Pre-trained Transformer so'zlarining qisqartmasi.",
@@ -116,7 +186,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "ai2",
         question: "Neyron tarmoqlarning asosiy 'o'rganish' algoritmi qanday nomlanadi?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "Backpropagation (Xatoni orqaga tarqatish) neyron tarmoqlarning og'irliklarini yangilashning asosiy algoritmidir.",
@@ -130,7 +200,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "ai3",
         question: "Tyuring testi (Turing Test) nima uchun xizmat qiladi?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "Tyuring testi mashinaning inson kabi fikrlash va muloqot qilish qobiliyatini aniqlash uchun qo'llaniladi.",
@@ -153,6 +223,34 @@ export const DEFAULT_QUIZZES = [
           { text: "Machine Learning (Mashinaviy O'rganish)", isCorrect: true, color: "#22c55e", shape: "square" },
           { text: "SQL Database", isCorrect: false, color: "#eab308", shape: "circle" },
           { text: "Blokcheyn", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+        ]
+      },
+      {
+        id: "ai5",
+        question: "Sun'iy intellektda 'Hallucination' (Gallyutsinatsiya) nima?",
+        timeLimit: 20,
+        points: 1000,
+        type: "multiple",
+        explanation: "AI model o'zidan ishonarli ko'ringan lekin mutlaqo noto'g'ri faktlarni to'qib chiqarishi gallyutsinatsiya deb ataladi.",
+        options: [
+          { text: "Modelning noto'g'ri faktlarni to'qib chiqarishi", isCorrect: true, color: "#ef4444", shape: "triangle" },
+          { text: "Kompyuterning qizib ketishi", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "Rasm chizish rejimi", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "Xavfsizlik protokoli", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "ai6",
+        question: "Transformer arxitekturasining asosiy mexanizmi qaysi?",
+        timeLimit: 20,
+        points: 1500,
+        type: "multiple",
+        explanation: "'Self-Attention' mexanizmi Transformer modellariga so'zlar orasidagi bog'liqlikni chuqur tushunish imkonini beradi.",
+        options: [
+          { text: "Self-Attention (O'z-o'ziga e'tibor)", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "Binary Search", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Recursion", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "Hash Table", isCorrect: false, color: "#eab308", shape: "circle" }
         ]
       }
     ]
@@ -216,7 +314,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "uz4",
         question: "Ibn Sinoning butun dunyoga mashhur tibbiyot ensiklopediyasi nomi nima?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "Ibn Sino 'Tib qonunlari' (Al-Qonun fit-Tibb) asari bilan dunyo tibbiyotiga 600 yil davomida darslik yaratgan.",
@@ -225,6 +323,34 @@ export const DEFAULT_QUIZZES = [
           { text: "Tib qonunlari", isCorrect: true, color: "#22c55e", shape: "square" },
           { text: "Qutadg'u bilig", isCorrect: false, color: "#3b82f6", shape: "diamond" },
           { text: "Boburnoma", isCorrect: false, color: "#eab308", shape: "circle" }
+        ]
+      },
+      {
+        id: "uz5",
+        question: "1018 ta yulduzning jadvalini (Zij) tuzgan buyuk astronom kim?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "Mirzo Ulug'bek Samarqand rasadxonasida 'Ziji Jadidi Ko'ragoniy' yulduzlar jadvalini yaratgan.",
+        options: [
+          { text: "Mirzo Ulug'bek", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "Al-Farg'oniy", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Imom Buxoriy", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "Alisher Navoiy", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "uz6",
+        question: "Turkiy tilda ilk bor 'Xamsa' (Besh doston) yaratgan buyuk shoir kim?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "Alisher Navoiy 1483-1485 yillarda turkiy tilda birinchi bo'lib mashhur 'Xamsa'ni yozgan.",
+        options: [
+          { text: "Zahiriddin Muhammad Bobur", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Alisher Navoiy", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "Nizomiy Ganjaviy", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "Muqimiy", isCorrect: false, color: "#eab308", shape: "circle" }
         ]
       }
     ]
@@ -284,6 +410,34 @@ export const DEFAULT_QUIZZES = [
           { text: "20 daqiqa", isCorrect: false, color: "#3b82f6", shape: "diamond" },
           { text: "50 daqiqa", isCorrect: false, color: "#eab308", shape: "circle" }
         ]
+      },
+      {
+        id: "m4",
+        question: "Daryodan o'tish: Ota va uning 2 o'g'li bor. Qayiq faqat 1 ta katta odamni yoki 2 ta bolani ko'tara oladi. Ular daryodan necha marta suzib o'tishda o'tishadi?",
+        timeLimit: 25,
+        points: 1500,
+        type: "multiple",
+        explanation: "1) 2 bola narigi qirg'oqqa o'tadi. 2) 1 bola qaytadi. 3) Ota o'tadi. 4) 2-bola qaytadi. 5) 2 bola birga o'tadi. Jami 5 ta qatnov!",
+        options: [
+          { text: "3 marta", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "5 marta", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "7 marta", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "4 marta", isCorrect: false, color: "#22c55e", shape: "square" }
+        ]
+      },
+      {
+        id: "m5",
+        question: "Fibonachchi ketma-ketligida 0, 1, 1, 2, 3, 5, 8, ? dan keyingi son qaysi?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "Har bir son oldingi ikki sonning yig'indisi: 5 + 8 = 13.",
+        options: [
+          { text: "11", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "13", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "15", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "12", isCorrect: false, color: "#eab308", shape: "circle" }
+        ]
       }
     ]
   },
@@ -304,7 +458,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "eng1",
         question: "What is the synonym of the word 'METICULOUS'?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "'Meticulous' means showing great attention to detail; very careful and precise.",
@@ -318,7 +472,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "eng2",
         question: "Choose the correct sentence in Subjunctive / Conditional mood:",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1500,
         type: "multiple",
         explanation: "Second conditional: 'If I WERE you, I WOULD study harder'.",
@@ -332,7 +486,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "eng3",
         question: "What does the idiom 'Bite the bullet' mean?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "'Bite the bullet' means to face a difficult situation with courage.",
@@ -341,6 +495,20 @@ export const DEFAULT_QUIZZES = [
           { text: "Qiyin vaziyatga mardona duch kelish / bardosh berish", isCorrect: true, color: "#22c55e", shape: "square" },
           { text: "Qurol ishlatish", isCorrect: false, color: "#eab308", shape: "circle" },
           { text: "Do'stidan xafa bo'lish", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+        ]
+      },
+      {
+        id: "eng4",
+        question: "Which word means 'ephemeral' (qisqa muddatli / o'tkinchi)?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "'Ephemeral' means lasting for a very short time (short-lived / temporary).",
+        options: [
+          { text: "Permanent", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Short-lived / Temporary", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "Strong", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "Dangerous", isCorrect: false, color: "#22c55e", shape: "square" }
         ]
       }
     ]
@@ -400,63 +568,19 @@ export const DEFAULT_QUIZZES = [
           { text: "Braziliya", isCorrect: false, color: "#eab308", shape: "circle" },
           { text: "AQSh", isCorrect: false, color: "#22c55e", shape: "square" }
         ]
-      }
-    ]
-  },
-  {
-    id: "quiz-cyber-security",
-    title: "Kiberxavfsizlik & Ethical Hacking",
-    description: "Xavfsizlik, parollar, fishing, shifrlash va xakerlikdan himoyalanish bilimlari!",
-    category: "Xavfsizlik",
-    categoryColor: "#ef4444",
-    difficulty: "Pro",
-    playsCount: 0,
-    rating: 5.0,
-    author: "Cyber Guard",
-    authorAvatar: "🛡️",
-    coverGradient: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #b91c1c 100%)",
-    icon: "🔐",
-    questions: [
-      {
-        id: "cs1",
-        question: "Fishing (Phishing) hujumi qanday amalga oshiriladi?",
-        timeLimit: 20,
-        points: 1000,
-        type: "multiple",
-        explanation: "Fishing - soxta saytlar, xatlar yoki havolalar orqali foydalanuvchining login va parollarini o'g'irlash usulidir.",
-        options: [
-          { text: "Kompyuterni jismoniy buzish orqali", isCorrect: false, color: "#ef4444", shape: "triangle" },
-          { text: "Soxta xat yoki havolalar orqali ma'lumotlarni aldab olish", isCorrect: true, color: "#22c55e", shape: "square" },
-          { text: "Serverga ortiqcha yuklama berish", isCorrect: false, color: "#eab308", shape: "circle" },
-          { text: "Wi-Fi antennasini uzish", isCorrect: false, color: "#3b82f6", shape: "diamond" }
-        ]
       },
       {
-        id: "cs2",
-        question: "DDoS hujumining asosiy maqsadi nima?",
-        timeLimit: 20,
-        points: 1000,
-        type: "multiple",
-        explanation: "DDoS (Distributed Denial of Service) serverga bir vaqtda millionlab so'rovlar yuborib, uni ishdan chiqarish.",
-        options: [
-          { text: "Serverni haddan tashqari yuklama bilan to'xtatib qo'yish", isCorrect: true, color: "#ef4444", shape: "triangle" },
-          { text: "Parollarni o'g'irlash", isCorrect: false, color: "#3b82f6", shape: "diamond" },
-          { text: "Fayllarni shifrlash", isCorrect: false, color: "#eab308", shape: "circle" },
-          { text: "Dasturni tezlashtirish", isCorrect: false, color: "#22c55e", shape: "square" }
-        ]
-      },
-      {
-        id: "cs3",
-        question: "2FA (Ikki bosqichli autentifikatsiya) nima uchun kerak?",
+        id: "ft4",
+        question: "Futbol bo'yicha Jahon Chempionatlarida eng ko'p g'olib bo'lgan terma jamoa qaysi?",
         timeLimit: 15,
         points: 1000,
         type: "multiple",
-        explanation: "2FA parol o'g'irlangan taqdirda ham hisobni SMS yoki kod orqali himoya qiladi.",
+        explanation: "Braziliya terma jamoasi 5 marotaba (1958, 1962, 1970, 1994, 2002) Jahon Chempioni bo'lgan.",
         options: [
-          { text: "Internetni tezlashtirish", isCorrect: false, color: "#ef4444", shape: "triangle" },
-          { text: "Hisob xavfsizligiga qo'shimcha himoya qatlami qo'shish", isCorrect: true, color: "#22c55e", shape: "square" },
-          { text: "Parolni eslab qolmaslik uchun", isCorrect: false, color: "#eab308", shape: "circle" },
-          { text: "Fayllarni siqish", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+          { text: "Germaniya", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Braziliya (5 marta)", isCorrect: true, color: "#22c55e", shape: "square" },
+          { text: "Italiya", isCorrect: false, color: "#3b82f6", shape: "diamond" },
+          { text: "Argentina", isCorrect: false, color: "#eab308", shape: "circle" }
         ]
       }
     ]
@@ -492,7 +616,7 @@ export const DEFAULT_QUIZZES = [
       {
         id: "sp2",
         question: "Yorug'lik tezligi vakuumda sekundiga qancha masofani bosib o'tadi?",
-        timeLimit: 20,
+        timeLimit: 15,
         points: 1000,
         type: "multiple",
         explanation: "Yorug'lik tezligi vakuumda taxminan 300,000 km/s (aniqrog'i 299,792,458 m/s).",
@@ -501,6 +625,20 @@ export const DEFAULT_QUIZZES = [
           { text: "300,000 km/s", isCorrect: true, color: "#22c55e", shape: "square" },
           { text: "1,000,000 km/s", isCorrect: false, color: "#eab308", shape: "circle" },
           { text: "30,000 km/s", isCorrect: false, color: "#3b82f6", shape: "diamond" }
+        ]
+      },
+      {
+        id: "sp3",
+        question: "Oyga ilk bor qadami yetgan inson kim?",
+        timeLimit: 15,
+        points: 1000,
+        type: "multiple",
+        explanation: "Nil Armstrong (Neil Armstrong) 1969-yil 20-iyulda 'Apollo 11' missiyasida Oyga birinchi bo'lib qadam qo'ygan.",
+        options: [
+          { text: "Yuriy Gagarin", isCorrect: false, color: "#ef4444", shape: "triangle" },
+          { text: "Nil Armstrong", isCorrect: true, color: "#3b82f6", shape: "diamond" },
+          { text: "Ilon Mask", isCorrect: false, color: "#eab308", shape: "circle" },
+          { text: "Bazz Oldrin", isCorrect: false, color: "#22c55e", shape: "square" }
         ]
       }
     ]
@@ -515,6 +653,59 @@ export const CATEGORIES = [
   "Mantiq",
   "Ingliz tili",
   "Sport",
-  "Xavfsizlik",
   "Fan"
 ];
+
+// Helper to prepare questions according to host chosen question count (5, 10, 15, 20, 30, 40, 50, etc.)
+export function prepareQuizQuestions(quiz, targetCount = 'all', shuffle = true, customTimeLimit = null) {
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+    return [];
+  }
+
+  // Collect all available questions across all default quizzes for pool fallback
+  const globalPool = DEFAULT_QUIZZES.flatMap(q => q.questions || []);
+  let pool = [...quiz.questions];
+
+  // If target count is greater than current quiz questions, pull unique questions from global pool
+  if (targetCount !== 'all' && typeof targetCount === 'number' && pool.length < targetCount) {
+    const existingIds = new Set(pool.map(q => q.id || q.question));
+    const extraQuestions = globalPool.filter(q => !existingIds.has(q.id || q.question));
+    
+    // Shuffle extras and add
+    const shuffledExtras = [...extraQuestions].sort(() => 0.5 - Math.random());
+    pool = [...pool, ...shuffledExtras];
+
+    // If still less, cycle pool with unique IDs
+    while (pool.length < targetCount) {
+      const idx = pool.length;
+      const baseQ = quiz.questions[idx % quiz.questions.length];
+      pool.push({
+        ...baseQ,
+        id: `${baseQ.id || 'q'}_extra_${idx}`
+      });
+    }
+  }
+
+  let finalQuestions = [...pool];
+
+  // Shuffle if requested
+  if (shuffle) {
+    finalQuestions = finalQuestions.sort(() => 0.5 - Math.random());
+  }
+
+  // Slice to target count
+  if (targetCount !== 'all' && typeof targetCount === 'number') {
+    finalQuestions = finalQuestions.slice(0, targetCount);
+  }
+
+  // Apply custom time limit if set
+  if (customTimeLimit && typeof customTimeLimit === 'number') {
+    finalQuestions = finalQuestions.map(q => ({
+      ...q,
+      timeLimit: customTimeLimit
+    }));
+  }
+
+  return finalQuestions;
+}
+

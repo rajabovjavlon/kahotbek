@@ -1,18 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap');
 
-:root {
+:root,
+[data-theme="dark"] {
   /* Clean Solid Dark Theme (Real Production SaaS) */
   --bg-main: #0b0f19;
   --bg-surface: #121826;
   --bg-card: #182234;
   --bg-card-hover: #1f2b42;
   --bg-input: #0e1422;
+  --bg-modal: #121826;
+  --bg-secondary: #1c273c;
+  --bg-secondary-hover: #25334e;
 
   --border-subtle: #222d42;
   --border-strong: #2f3e5c;
   --border-focus: #4f46e5;
 
-  /* Solid Professional Brand Colors (No messy rainbow gradients) */
+  /* Solid Professional Brand Colors */
   --brand-primary: #4f46e5;
   --brand-primary-hover: #4338ca;
   --brand-accent: #0284c7;
@@ -49,6 +53,64 @@
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] {
+  /* Crisp Modern Light Theme */
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #f1f5f9;
+  --bg-modal: #ffffff;
+  --bg-secondary: #f1f5f9;
+  --bg-secondary-hover: #e2e8f0;
+
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #4f46e5;
+
+  /* Solid Professional Brand Colors */
+  --brand-primary: #4f46e5;
+  --brand-primary-hover: #4338ca;
+  --brand-accent: #0284c7;
+  --brand-accent-hover: #0369a1;
+
+  /* Solid Status Colors */
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.12);
+  --status-error: #ef4444;
+  --status-error-bg: rgba(239, 68, 68, 0.12);
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+
+  /* Kahoot Solid Answer Colors */
+  --kahoot-red: #dc2626;
+  --kahoot-red-hover: #b91c1c;
+  --kahoot-blue: #2563eb;
+  --kahoot-blue-hover: #1d4ed8;
+  --kahoot-yellow: #d97706;
+  --kahoot-yellow-hover: #b45309;
+  --kahoot-green: #059669;
+  --kahoot-green-hover: #047857;
+
+  /* Typography */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-sub: #334155;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 * {
@@ -66,6 +128,7 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -100,13 +163,14 @@ input, textarea, select {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .clean-card:hover {
   transform: translateY(-2px);
   border-color: var(--border-strong);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Solid Buttons */
@@ -273,10 +337,39 @@ input, textarea, select {
   100% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes floatUpAnim {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.15);
+  }
+  75% {
+    opacity: 0.95;
+    transform: translateY(-80px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-160px) scale(0.8);
+  }
+}
+
+@keyframes shakeAnim {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
 .anim-fade {
   animation: fadeIn 0.22s ease-out forwards;
 }
 
 .anim-pop {
   animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-shake {
+  animation: shakeAnim 0.4s ease-in-out;
 }

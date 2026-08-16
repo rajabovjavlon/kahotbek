@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   TrendingUp,
   ArrowRight,
-  Gamepad2
+  Gamepad2,
+  HelpCircle
 } from 'lucide-react';
 import QuizCard from '../components/QuizCard';
 import { CATEGORIES, DEFAULT_QUIZZES } from '../data/defaultQuizzes';
@@ -21,7 +22,7 @@ import { soundManager } from '../utils/sounds';
 
 export default function HomeView({
   quizzes = [],
-  user = { name: 'Kahot Master', coins: 450, avatar: '⚡' },
+  user = { name: 'Kahot Master', coins: 450, avatar: '🦁', xp: 0, wins: 0 },
   onPlaySolo = () => {},
   onHostLobby = () => {},
   onOpenJoinModal = () => {},
@@ -33,7 +34,13 @@ export default function HomeView({
   const [searchQuery, setSearchQuery] = useState('');
 
   const quizList = quizzes && quizzes.length > 0 ? quizzes : DEFAULT_QUIZZES;
-  const currentUser = user || { name: 'Kahot Master', coins: 450, avatar: '⚡' };
+  const currentUser = user || { name: 'Kahot Master', coins: 450, avatar: '🦁', xp: 0, wins: 0 };
+
+  // Calculate real metrics
+  const totalQuestions = quizList.reduce((acc, q) => acc + (q.questions ? q.questions.length : 0), 0);
+  const totalQuizzes = quizList.length;
+  const userXP = currentUser.xp || 0;
+  const userWins = currentUser.wins || 0;
 
   // Filter quizzes
   const filteredQuizzes = quizList.filter(q => {
@@ -57,7 +64,7 @@ export default function HomeView({
         padding: '40px 36px',
         overflow: 'hidden',
         boxShadow: '0 20px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15)',
-        marginBottom: '40px'
+        marginBottom: '36px'
       }}>
         {/* Glow sphere background */}
         <div style={{
@@ -81,7 +88,7 @@ export default function HomeView({
           zIndex: 1
         }}>
           <div>
-            {/* Live indicator badge */}
+            {/* Real status indicator badge */}
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -96,7 +103,7 @@ export default function HomeView({
               marginBottom: '16px'
             }}>
               <span className="pulse-dot" />
-              <span>120+ Jonli Xonalar Faol</span>
+              <span>Real-Time Jonli Xonalar Faol</span>
             </div>
 
             <h1 style={{
@@ -107,13 +114,13 @@ export default function HomeView({
               marginBottom: '14px',
               letterSpacing: '-0.03em'
             }}>
-              Intellektual Janglar & <br />
+              Haqiqiy O'yinchilar & <br />
               <span style={{
                 background: 'linear-gradient(90deg, #a855f7 0%, #38bdf8 50%, #4ade80 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
-                Kahoot Uslubidagi Jonli Quizlar!
+                Jonli Viktorinalar Maydoni!
               </span>
             </h1>
 
@@ -124,7 +131,7 @@ export default function HomeView({
               lineHeight: 1.6,
               marginBottom: '26px'
             }}>
-              Do'stlaringiz, sinfdoshlaringiz va jamoangiz bilan jonli xona oching, 6 xonali PIN kod orqali ulaning va bilimlaringizni sinab podiumga ko'tariling!
+              Do'stlaringiz va jamoangiz bilan jonli xona oching, 6 xonali PIN kod orqali ulaning va bilimlaringizni sinab podiumga ko'tariling!
             </p>
 
             {/* Quick Action Buttons */}
@@ -162,7 +169,7 @@ export default function HomeView({
                 style={{ fontSize: '15px', padding: '14px 22px', borderRadius: '16px' }}
               >
                 <Play size={18} fill="#fff" />
-                <span>Tezkor Solo Mashq</span>
+                <span>Tezkor Solo O'yin</span>
               </button>
             </div>
           </div>
@@ -228,14 +235,14 @@ export default function HomeView({
               paddingTop: '10px',
               borderTop: '1px solid rgba(255,255,255,0.06)'
             }}>
-              <span>👤 {currentUser.name}</span>
-              <span style={{ color: '#fbbf24', fontWeight: '700' }}>🪙 {currentUser.coins || 450} Tanga</span>
+              <span>{currentUser.avatar} {currentUser.name}</span>
+              <span style={{ color: '#fbbf24', fontWeight: '700' }}>🪙 {currentUser.coins || 0} Tanga</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Counter Bar */}
+      {/* Real Dynamic Stats Bar */}
       <section style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -243,10 +250,10 @@ export default function HomeView({
         marginBottom: '36px'
       }}>
         {[
-          { label: "Jami O'ynalgan O'yinlar", val: "48,500+", icon: "🔥", color: "#f59e0b" },
-          { label: "Tayyor Savollar Bazasi", val: "1,250+", icon: "📚", color: "#3b82f6" },
-          { label: "Faol O'yinchilar", val: "12,800+", icon: "👥", color: "#10b981" },
-          { label: "O'zbekistondagi №1 Quiz", val: "100% Bepul", icon: "⚡", color: "#8b5cf6" },
+          { label: "Mavjud Viktorinalar", val: `${totalQuizzes} ta`, icon: "📚", color: "#3b82f6" },
+          { label: "Jami Savollar Bazasi", val: `${totalQuestions} ta`, icon: "🎯", color: "#f59e0b" },
+          { label: "Sizning G'alabalaringiz", val: `${userWins} ta`, icon: "🏆", color: "#10b981" },
+          { label: "To'plangan Tajriba (XP)", val: `⚡ ${userXP}`, icon: "⭐", color: "#8b5cf6" },
         ].map((st, i) => (
           <div key={i} className="glass-panel" style={{
             padding: '18px 20px',
@@ -293,7 +300,7 @@ export default function HomeView({
           <div>
             <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Gamepad2 size={24} color="#8b5cf6" />
-              <span>Ommabop Quizlar & Bellashuvlar</span>
+              <span>Viktorinalar & Mavzular</span>
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8' }}>
               Turli sohalar bo'yicha eng sara intellektual o'yinlar

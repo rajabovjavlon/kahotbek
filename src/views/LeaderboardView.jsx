@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
   Crown, 
@@ -7,23 +7,60 @@ import {
   ShieldCheck, 
   Zap, 
   Search,
-  Award
+  Award,
+  Users
 } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 
-const TOP_RANKINGS = [
-  { rank: 1, name: "Javlonbek Developer", avatar: "⚡", xp: 148500, wins: 142, league: "Olmos Master", badge: "👑" },
-  { rank: 2, name: "Shahzod IT_King", avatar: "🤖", xp: 132400, wins: 118, league: "Olmos Master", badge: "🥈" },
-  { rank: 3, name: "Malika Coding", avatar: "🐱", xp: 119800, wins: 95, league: "Olmos Master", badge: "🥉" },
-  { rank: 4, name: "Sardorbek Pro", avatar: "🥷", xp: 98400, wins: 84, league: "Oltin Liga", badge: "🔥" },
-  { rank: 5, name: "Zuhra Brain", avatar: "🧠", xp: 87200, wins: 76, league: "Oltin Liga", badge: "💎" },
-  { rank: 6, name: "Temur Xon", avatar: "👑", xp: 76500, wins: 62, league: "Kumush Liga", badge: "⭐" },
-  { rank: 7, name: "Fotima Geek", avatar: "🚀", xp: 64900, wins: 54, league: "Kumush Liga", badge: "⚡" },
-  { rank: 8, name: "Bekzod Mastermind", avatar: "💡", xp: 52100, wins: 41, league: "Bronza Liga", badge: "🎯" },
-];
-
 export default function LeaderboardView({ user }) {
   const [filter, setFilter] = useState('all'); // 'all', 'weekly', 'monthly'
+  const [realRankings, setRealRankings] = useState([]);
+
+  useEffect(() => {
+    // Load real players history from localStorage
+    const savedPlayers = localStorage.getItem('kahotbek_real_players');
+    let playersList = [];
+    if (savedPlayers) {
+      try { playersList = JSON.parse(savedPlayers); } catch (e) {}
+    }
+
+    // Ensure current user is in the list
+    const existingIndex = playersList.findIndex(p => p.name === user.name);
+    const currentUserEntry = {
+      name: user.name,
+      username: user.username || `@${user.name.toLowerCase().replace(/\s+/g, '_')}`,
+      avatar: user.avatar || '🦁',
+      xp: user.xp || 0,
+      wins: user.wins || 0,
+      isVerified: user.isVerified || false
+    };
+
+    if (existingIndex >= 0) {
+      playersList[existingIndex] = currentUserEntry;
+    } else {
+      playersList.push(currentUserEntry);
+    }
+
+    // Sort by XP descending
+    playersList.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+
+    setRealRankings(playersList);
+    localStorage.setItem('kahotbek_real_players', JSON.stringify(playersList));
+  }, [user]);
+
+  const getLeague = (xp) => {
+    if (xp >= 10000) return 'Olmos Master';
+    if (xp >= 5000) return 'Oltin Liga';
+    if (xp >= 2000) return 'Kumush Liga';
+    return 'Bronza Liga';
+  };
+
+  const getBadge = (rank) => {
+    if (rank === 1) return '👑';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return '⭐';
+  };
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 60px' }}>
@@ -43,13 +80,13 @@ export default function LeaderboardView({ user }) {
           marginBottom: '10px'
         }}>
           <Trophy size={16} />
-          <span>Eng Kuchli Bilimdonlar</span>
+          <span>Haqiqiy O'yinchilar Reytingi</span>
         </div>
         <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
-          Umumiy Reyting & Peshqadamlar
+          Peshqadamlar Jadvali
         </h1>
         <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>
-          Har bir to'g'ri javob va g'alaba uchun XP to'plang hamda ligalarda ko'tariling!
+          O'yinlarda to'plangan real ballar va g'alabalar bo'yicha jonli peshqadamlar
         </p>
       </div>
 
@@ -86,54 +123,60 @@ export default function LeaderboardView({ user }) {
         ))}
       </div>
 
-      {/* Top 3 Cards Banner */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '16px',
-        marginBottom: '30px'
-      }}>
-        {TOP_RANKINGS.slice(0, 3).map((player, i) => (
-          <div
-            key={player.rank}
-            className="glass-panel anim-pop"
-            style={{
-              padding: '24px 16px',
-              borderRadius: '22px',
-              textAlign: 'center',
-              background: i === 0 
-                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(17, 22, 37, 0.9))' 
-                : 'rgba(17, 22, 37, 0.9)',
-              border: i === 0 ? '2px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255,255,255,0.08)',
-              boxShadow: i === 0 ? '0 10px 30px rgba(245, 158, 11, 0.2)' : 'none'
-            }}
-          >
-            <div style={{ fontSize: '24px', marginBottom: '4px' }}>{player.badge}</div>
-            <div style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '18px',
-              background: 'rgba(255,255,255,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '28px',
-              margin: '0 auto 12px'
-            }}>
-              {player.avatar}
+      {/* Top 3 Real Cards */}
+      {realRankings.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${Math.min(realRankings.length, 3)}, 1fr)`,
+          gap: '16px',
+          marginBottom: '30px'
+        }}>
+          {realRankings.slice(0, 3).map((player, i) => (
+            <div
+              key={i}
+              className="glass-panel anim-pop"
+              style={{
+                padding: '24px 16px',
+                borderRadius: '22px',
+                textAlign: 'center',
+                background: i === 0 
+                  ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(17, 22, 37, 0.9))' 
+                  : 'rgba(17, 22, 37, 0.9)',
+                border: i === 0 ? '2px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: i === 0 ? '0 10px 30px rgba(245, 158, 11, 0.2)' : 'none'
+              }}
+            >
+              <div style={{ fontSize: '24px', marginBottom: '4px' }}>{getBadge(i + 1)}</div>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '18px',
+                background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                margin: '0 auto 12px',
+                boxShadow: '0 0 20px rgba(14, 165, 233, 0.3)'
+              }}>
+                {player.avatar || '🦁'}
+              </div>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '2px' }}>
+                {player.name}
+              </h3>
+              <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                {player.username}
+              </div>
+              <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: '700', marginBottom: '8px' }}>
+                {getLeague(player.xp || 0)}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: '900', color: '#fbbf24' }}>
+                ⚡ {(player.xp || 0).toLocaleString()} XP
+              </div>
             </div>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '4px' }}>
-              {player.name}
-            </h3>
-            <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: '700', marginBottom: '8px' }}>
-              {player.league}
-            </div>
-            <div style={{ fontSize: '16px', fontWeight: '900', color: '#fbbf24' }}>
-              ⚡ {player.xp.toLocaleString()} XP
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Full Leaderboard Table */}
       <div className="glass-panel" style={{
@@ -143,82 +186,61 @@ export default function LeaderboardView({ user }) {
         flexDirection: 'column',
         gap: '8px'
       }}>
-        {TOP_RANKINGS.map((p) => (
-          <div
-            key={p.rank}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 20px',
-              borderRadius: '16px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{
-                width: '28px',
-                fontSize: '15px',
-                fontWeight: '900',
-                color: p.rank <= 3 ? '#fbbf24' : '#94a3b8'
-              }}>
-                #{p.rank}
-              </div>
-
-              <div style={{ fontSize: '24px' }}>{p.avatar}</div>
-
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff' }}>
-                  {p.name}
+        {realRankings.map((p, idx) => {
+          const isMe = p.name === user.name;
+          return (
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderRadius: '16px',
+                background: isMe 
+                  ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.2))' 
+                  : 'rgba(255, 255, 255, 0.03)',
+                border: isMe ? '2px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.06)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '28px',
+                  fontSize: '15px',
+                  fontWeight: '900',
+                  color: idx < 3 ? '#fbbf24' : '#94a3b8'
+                }}>
+                  #{idx + 1}
                 </div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                  🏆 {p.wins} ta g'alaba • {p.league}
+
+                <div style={{ fontSize: '24px' }}>{p.avatar || '🦁'}</div>
+
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{p.name}</span>
+                    {isMe && (
+                      <span style={{ fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '6px', fontWeight: '800' }}>
+                        SIZ
+                      </span>
+                    )}
+                    {p.isVerified && (
+                      <span style={{ fontSize: '11px', color: '#0ea5e9' }}>✓</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    🏆 {p.wins || 0} ta g'alaba • {getLeague(p.xp || 0)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '16px', fontWeight: '900', color: '#38bdf8' }}>
+                  ⚡ {(p.xp || 0).toLocaleString()} XP
                 </div>
               </div>
             </div>
-
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '16px', fontWeight: '900', color: '#38bdf8' }}>
-                ⚡ {p.xp.toLocaleString()} XP
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* Current User Row */}
-        <div style={{
-          marginTop: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 20px',
-          borderRadius: '16px',
-          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(6, 182, 212, 0.25))',
-          border: '2px solid #8b5cf6'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '28px', fontSize: '15px', fontWeight: '900', color: '#fff' }}>
-              #12
-            </div>
-            <div style={{ fontSize: '24px' }}>{user.avatar || '⚡'}</div>
-            <div>
-              <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>{user.name}</span>
-                <span style={{ fontSize: '10px', background: '#8b5cf6', padding: '2px 6px', borderRadius: '6px' }}>SIZ</span>
-              </div>
-              <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
-                🏆 {user.wins || 12} ta g'alaba • Oltin Liga
-              </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '16px', fontWeight: '900', color: '#38bdf8' }}>
-              ⚡ {user.xp.toLocaleString()} XP
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Clock, 
-  Award, 
   Flame, 
   Check, 
   X, 
-  ChevronRight, 
   Trophy, 
   Zap, 
-  Users,
-  Volume2,
   Sparkles,
-  BarChart3
+  ArrowRight
 } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 import { fireQuickStreakConfetti } from '../utils/confetti';
@@ -25,48 +21,36 @@ const SHAPES = [
 
 export default function GamePlayView({
   quiz,
-  players,
+  players = [],
   user,
   onFinishGame
 }) {
   const [currentQIndex, setCurrentQIndex] = useState(0);
-  // Game phases: 'intro' (3-2-1), 'question' (active timer & choosing), 'revealed' (showing correct answer & user feedback), 'leaderboard' (mid-game standings)
-  const [phase, setPhase] = useState('intro');
+  const [phase, setPhase] = useState('intro'); // 'intro', 'question', 'revealed'
   const [introCount, setIntroCount] = useState(3);
   
-  const currentQuestion = quiz.questions[currentQIndex];
+  const currentQuestion = quiz.questions[currentQIndex] || quiz.questions[0];
   const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 20);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
 
-  // Local mutable score tracking for user & bots
-  const [gamePlayers, setGamePlayers] = useState(() => {
-    return players.map(p => ({
-      ...p,
-      currentScore: 0,
-      streak: 0,
-      lastAnswer: null,
-      lastCorrect: false,
-      lastPoints: 0
-    }));
-  });
-
-  // Answer distribution counts for the bar chart
-  const [answerStats, setAnswerStats] = useState([0, 0, 0, 0]);
-
-  // Ref to track if user already answered current question
+  // Auto transition timer ref
+  const autoNextTimerRef = useRef(null);
   const hasAnsweredRef = useRef(false);
 
-  // 1. Intro 3-2-1 countdown effect
+  // 1. Intro 3-2-1 countdown
   useEffect(() => {
     if (phase === 'intro') {
       soundManager.playTick(true);
       if (introCount > 1) {
         const timer = setTimeout(() => {
           setIntroCount(c => c - 1);
-        }, 800);
+        }, 700);
         return () => clearTimeout(timer);
       } else if (introCount === 1) {
         const timer = setTimeout(() => {
@@ -75,13 +59,13 @@ export default function GamePlayView({
           setTimeLeft(currentQuestion?.timeLimit || 20);
           hasAnsweredRef.current = false;
           setSelectedOptionIndex(null);
-        }, 800);
+        }, 700);
         return () => clearTimeout(timer);
       }
     }
   }, [phase, introCount, currentQuestion]);
 
-  // 2. Question active countdown timer
+  // 2. Question countdown timer
   useEffect(() => {
     if (phase === 'question') {
       if (timeLeft > 0) {
@@ -91,15 +75,24 @@ export default function GamePlayView({
         }, 1000);
         return () => clearTimeout(timer);
       } else {
-        // Time ran out!
+        // Time ran out! Immediately reveal and auto advance
         handleTimeExpired();
       }
     }
   }, [phase, timeLeft]);
 
-  // Handle when time runs out or user locks answer
+  // Cleanup auto next timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current);
+    };
+  }, []);
+
   const handleTimeExpired = () => {
-    revealResults(selectedOptionIndex);
+    if (!hasAnsweredRef.current) {
+      hasAnsweredRef.current = true;
+      revealAndAutoAdvance(null);
+    }
   };
 
   // User selects an option
@@ -109,29 +102,36 @@ export default function GamePlayView({
     setSelectedOptionIndex(optIdx);
     soundManager.playSelectAnswer();
 
-    // Auto reveal or wait 1 second
-    setTimeout(() => {
-      revealResults(optIdx);
-    }, 600);
+    revealAndAutoAdvance(optIdx);
   };
 
-  // Reveal results and simulate bot performance
-  const revealResults = (userChoice) => {
+  // Reveal results and automatically advance to next question in 1.8s
+  const revealAndAutoAdvance = (userChoice) => {
     const correctIdx = currentQuestion.options.findIndex(o => o.isCorrect);
     const userIsCorrect = userChoice === correctIdx;
     
-    // Calculate user points based on speed
+    // Calculate points based on speed
     const maxPoints = currentQuestion.points || 1000;
-    const timeFactor = (timeLeft / (currentQuestion.timeLimit || 20));
+    const timeFactor = Math.max(0, timeLeft / (currentQuestion.timeLimit || 20));
     const earned = userIsCorrect ? Math.round(maxPoints * (0.5 + 0.5 * timeFactor)) : 0;
 
     setIsAnswerCorrect(userIsCorrect);
     setPointsEarned(earned);
 
+    let newTotalScore = totalScore;
+    let newCorrectCount = correctCount;
+    let newStreak = streak;
+
     if (userIsCorrect) {
       soundManager.playCorrect();
-      const newStreak = streak + 1;
+      newStreak = streak + 1;
       setStreak(newStreak);
+      if (newStreak > maxStreak) setMaxStreak(newStreak);
+      newCorrectCount = correctCount + 1;
+      setCorrectCount(newCorrectCount);
+      newTotalScore = totalScore + earned;
+      setTotalScore(newTotalScore);
+
       if (newStreak >= 2) {
         fireQuickStreakConfetti();
         soundManager.playStreak();
@@ -141,74 +141,34 @@ export default function GamePlayView({
       setStreak(0);
     }
 
-    // Simulate Bot choices and calculate distribution
-    const stats = [0, 0, 0, 0];
-    if (userChoice !== null && userChoice >= 0 && userChoice < 4) {
-      stats[userChoice]++;
-    }
-
-    const updatedPlayers = gamePlayers.map(p => {
-      if (!p.isBot && p.name === user.name) {
-        return {
-          ...p,
-          currentScore: p.currentScore + earned,
-          streak: userIsCorrect ? p.streak + 1 : 0,
-          lastAnswer: userChoice,
-          lastCorrect: userIsCorrect,
-          lastPoints: earned
-        };
-      }
-
-      if (p.isBot) {
-        // Bot intelligence: 70% chance to pick correct
-        const botCorrect = Math.random() < 0.72;
-        const botChoice = botCorrect ? correctIdx : Math.floor(Math.random() * currentQuestion.options.length);
-        const botPoints = botCorrect ? Math.round(maxPoints * (0.4 + 0.5 * Math.random())) : 0;
-        
-        if (botChoice >= 0 && botChoice < 4) stats[botChoice]++;
-
-        return {
-          ...p,
-          currentScore: p.currentScore + botPoints,
-          streak: botCorrect ? p.streak + 1 : 0,
-          lastAnswer: botChoice,
-          lastCorrect: botCorrect,
-          lastPoints: botPoints
-        };
-      }
-
-      return p;
-    });
-
-    setAnswerStats(stats);
-    setGamePlayers(updatedPlayers);
     setPhase('revealed');
+
+    // AUTOMATIC FAST TRANSITION TO NEXT QUESTION (1.8s)
+    autoNextTimerRef.current = setTimeout(() => {
+      if (currentQIndex + 1 < quiz.questions.length) {
+        setCurrentQIndex(c => c + 1);
+        setIntroCount(3);
+        setPhase('intro');
+      } else {
+        // Game ended! Go to Victory Podium with exact stats
+        soundManager.playFanfare();
+        const finalStandings = [
+          {
+            name: user.name,
+            username: user.username || `@${user.name.toLowerCase().replace(/\s+/g, '_')}`,
+            avatar: user.avatar || '🦁',
+            currentScore: newTotalScore,
+            correctCount: newCorrectCount,
+            totalQuestions: quiz.questions.length,
+            maxStreak: Math.max(newStreak, maxStreak)
+          }
+        ];
+        onFinishGame(finalStandings);
+      }
+    }, 1800);
   };
 
-  // Next step: show mid-leaderboard or next question
-  const handleProceedFromRevealed = () => {
-    soundManager.playClick();
-    setPhase('leaderboard');
-  };
-
-  // Next question or complete game
-  const handleNextQuestion = () => {
-    soundManager.playClick();
-    if (currentQIndex + 1 < quiz.questions.length) {
-      setCurrentQIndex(c => c + 1);
-      setIntroCount(3);
-      setPhase('intro');
-    } else {
-      // Game ended! Finalize and go to podium
-      soundManager.playFanfare();
-      onFinishGame(gamePlayers.sort((a, b) => b.currentScore - a.currentScore));
-    }
-  };
-
-  // Sort players for leaderboard
-  const sortedLeaderboard = [...gamePlayers].sort((a, b) => b.currentScore - a.currentScore);
-
-  // 1. INTRO SCREEN
+  // 1. INTRO 3-2-1 SCREEN
   if (phase === 'intro') {
     return (
       <div style={{
@@ -251,136 +211,8 @@ export default function GamePlayView({
     );
   }
 
-  // 2. MID-GAME LEADERBOARD SCREEN
-  if (phase === 'leaderboard') {
-    return (
-      <div style={{
-        maxWidth: '850px',
-        margin: '0 auto',
-        padding: '30px 20px 60px'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(245, 158, 11, 0.15)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-            padding: '6px 16px',
-            borderRadius: '9999px',
-            color: '#fbbf24',
-            fontSize: '13px',
-            fontWeight: '800',
-            textTransform: 'uppercase',
-            marginBottom: '10px'
-          }}>
-            <Trophy size={16} />
-            <span>Oraliq Reyting ({currentQIndex + 1} / {quiz.questions.length})</span>
-          </div>
-          <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
-            Peshqadamlar Jadvali
-          </h2>
-        </div>
-
-        {/* Standings List */}
-        <div className="glass-panel" style={{
-          padding: '20px',
-          borderRadius: '24px',
-          marginBottom: '30px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          {sortedLeaderboard.slice(0, 6).map((p, rank) => {
-            const isUser = p.name === user.name;
-            return (
-              <div
-                key={p.id || rank}
-                className="anim-pop"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '14px 20px',
-                  borderRadius: '16px',
-                  background: isUser 
-                    ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.2))' 
-                    : (rank === 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)'),
-                  border: isUser ? '2px solid #8b5cf6' : (rank === 0 ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)')
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  {/* Rank badge */}
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: rank === 0 ? '#f59e0b' : (rank === 1 ? '#94a3b8' : (rank === 2 ? '#b45309' : 'rgba(255,255,255,0.1)')),
-                    color: rank < 3 ? '#000' : '#fff',
-                    fontWeight: '900',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px'
-                  }}>
-                    {rank + 1}
-                  </div>
-
-                  <div style={{ fontSize: '24px' }}>{p.avatar || '⚡'}</div>
-
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>{p.name}</span>
-                      {isUser && (
-                        <span style={{ fontSize: '10px', background: '#8b5cf6', padding: '2px 6px', borderRadius: '6px' }}>SIZ</span>
-                      )}
-                    </div>
-                    {p.streak >= 2 && (
-                      <div style={{ fontSize: '11px', color: '#f97316', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <Flame size={12} fill="#f97316" />
-                        <span>{p.streak}x ketma-ket to'g'ri!</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#38bdf8' }}>
-                    {p.currentScore.toLocaleString()} ball
-                  </div>
-                  {p.lastPoints > 0 && (
-                    <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '700' }}>
-                      +{p.lastPoints}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Continue Button */}
-        <div style={{ textAlign: 'center' }}>
-          <button
-            onClick={handleNextQuestion}
-            className="btn-neon-primary"
-            style={{
-              padding: '14px 40px',
-              fontSize: '16px',
-              borderRadius: '16px'
-            }}
-          >
-            <span>{currentQIndex + 1 < quiz.questions.length ? "Keyingi Savolga O'tish" : "Yakuniy Natijalarni Ko'rish"}</span>
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. MAIN GAME SCREEN (Active question or Revealed result)
+  // 2. MAIN ACTIVE QUESTION & REVEAL SCREEN
   const isRevealed = phase === 'revealed';
-  const correctOptionIndex = currentQuestion.options.findIndex(o => o.isCorrect);
 
   return (
     <div style={{
@@ -392,7 +224,7 @@ export default function GamePlayView({
       minHeight: '85vh',
       justifyContent: 'space-between'
     }}>
-      {/* Top Status Bar: Question Progress, Circular Countdown Timer, Streak Indicator */}
+      {/* Top Status Bar: Question Number, Circular Timer, Live Score & Streak */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -411,8 +243,8 @@ export default function GamePlayView({
           borderRadius: '14px',
           border: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
-          <span style={{ fontSize: '16px' }}>⚡</span>
-          <span style={{ fontSize: '14px', fontWeight: '800', color: '#fff' }}>
+          <span style={{ fontSize: '18px' }}>⚡</span>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#fff' }}>
             Savol {currentQIndex + 1} / {quiz.questions.length}
           </span>
         </div>
@@ -458,7 +290,7 @@ export default function GamePlayView({
           </span>
         </div>
 
-        {/* User Streak & Score indicator */}
+        {/* Live Score and Streak */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -474,8 +306,8 @@ export default function GamePlayView({
               <span>{streak}x Combo</span>
             </div>
           )}
-          <div style={{ fontSize: '14px', fontWeight: '800', color: '#38bdf8' }}>
-            {gamePlayers.find(p => p.name === user.name)?.currentScore || 0} ball
+          <div style={{ fontSize: '15px', fontWeight: '800', color: '#38bdf8' }}>
+            {totalScore.toLocaleString()} ball
           </div>
         </div>
       </div>
@@ -502,14 +334,14 @@ export default function GamePlayView({
         </h2>
       </div>
 
-      {/* Result feedback notification (if revealed) */}
+      {/* Fast Result Feedback Banner */}
       {isRevealed && (
         <div className="anim-pop" style={{
           padding: '16px 24px',
           borderRadius: '18px',
           background: isAnswerCorrect 
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.35))'
-            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.35))',
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.4))'
+            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.4))',
           border: `2px solid ${isAnswerCorrect ? '#10b981' : '#ef4444'}`,
           marginBottom: '20px',
           display: 'flex',
@@ -544,14 +376,10 @@ export default function GamePlayView({
             </div>
           </div>
 
-          <button
-            onClick={handleProceedFromRevealed}
-            className="btn-neon-primary"
-            style={{ padding: '10px 24px', borderRadius: '12px' }}
-          >
-            <span>Davom Etish</span>
-            <ChevronRight size={16} />
-          </button>
+          <div style={{ fontSize: '12px', color: '#a7f3d0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Sparkles size={14} />
+            <span>Keyingi savolga o'tilmoqda...</span>
+          </div>
         </div>
       )}
 
@@ -630,20 +458,18 @@ export default function GamePlayView({
                 </span>
               </div>
 
-              {/* Reveal indicator / answer count */}
-              {isRevealed && (
+              {isRevealed && isCorrect && (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
                   background: 'rgba(0,0,0,0.4)',
                   padding: '4px 10px',
                   borderRadius: '10px',
                   fontSize: '13px',
-                  fontWeight: '800'
+                  fontWeight: '800',
+                  color: '#4ade80'
                 }}>
-                  {isCorrect ? <Check size={18} color="#4ade80" /> : <X size={18} color="#fca5a5" />}
-                  <span>{answerStats[idx]} ta</span>
+                  <Check size={18} />
                 </div>
               )}
             </button>

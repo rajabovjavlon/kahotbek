@@ -1,122 +1,355 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
+import JoinModal from './components/JoinModal';
+import AuthModal from './components/AuthModal';
+import HomeView from './views/HomeView';
+import ExploreView from './views/ExploreView';
+import CreateQuizView from './views/CreateQuizView';
+import LobbyView from './views/LobbyView';
+import GamePlayView from './views/GamePlayView';
+import PodiumView from './views/PodiumView';
+import LeaderboardView from './views/LeaderboardView';
+import ProfileView from './views/ProfileView';
 
-function App() {
-  const [count, setCount] = useState(0)
+import { DEFAULT_QUIZZES } from './data/defaultQuizzes';
+import { soundManager } from './utils/sounds';
+import { socket } from './utils/socket';
+
+export default function App() {
+  // 1. User state
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('kahotbek_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      id: 'usr-default',
+      name: 'Kahot Master',
+      username: '@kahot_master',
+      avatar: '🦁',
+      coins: 450,
+      xp: 2850,
+      level: 5,
+      wins: 14,
+      isVerified: false
+    };
+  });
+
+  // 2. Custom Quizzes state
+  const [customQuizzes, setCustomQuizzes] = useState(() => {
+    const saved = localStorage.getItem('kahotbek_custom_quizzes');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kahotbek_user', JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('kahotbek_custom_quizzes', JSON.stringify(customQuizzes));
+  }, [customQuizzes]);
+
+  const allQuizzes = [...customQuizzes, ...DEFAULT_QUIZZES];
+
+  // 3. Navigation & Modals
+  const [currentTab, setCurrentTab] = useState('home');
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // 4. Active Room & Socket Session
+  const [activeQuiz, setActiveQuiz] = useState(DEFAULT_QUIZZES[0]);
+  const [roomPin, setRoomPin] = useState('');
+  const [hostSecret, setHostSecret] = useState(null);
+  const [isHost, setIsHost] = useState(true);
+  const [lobbyPlayers, setLobbyPlayers] = useState([]);
+  const [finalScores, setFinalScores] = useState([]);
+  const [editingQuiz, setEditingQuiz] = useState(null);
+
+  // Socket listener bindings
+  useEffect(() => {
+    socket.on('player_joined', ({ players }) => {
+      soundManager.playClick();
+      setLobbyPlayers(players);
+    });
+
+    socket.on('player_left', ({ players }) => {
+      setLobbyPlayers(players);
+    });
+
+    socket.on('game_started', () => {
+      soundManager.playStartGame();
+      setCurrentTab('gameplay');
+    });
+
+    socket.on('game_finished', ({ finalScores }) => {
+      setFinalScores(finalScores);
+      setCurrentTab('podium');
+    });
+
+    return () => {
+      socket.off('player_joined');
+      socket.off('player_left');
+      socket.off('game_started');
+      socket.off('game_finished');
+    };
+  }, []);
+
+  // 1. Host creates a live real-time room
+  const handleHostLobby = (quiz) => {
+    setActiveQuiz(quiz);
+    setIsHost(true);
+    const newPin = Math.floor(100000 + Math.random() * 900000).toString();
+    setRoomPin(newPin);
+
+    // Emit create_room to server
+    socket.emit('create_room', {
+      pin: newPin,
+      quiz,
+      hostName: user.name,
+      hostAvatar: user.avatar
+    }, (res) => {
+      if (res && res.success) {
+        setHostSecret(res.hostSecret);
+        setLobbyPlayers(res.players);
+      }
+    });
+
+    setLobbyPlayers([
+      { id: socket.id || 'host', name: user.name, avatar: user.avatar, isHost: true, score: 0 }
+    ]);
+    setCurrentTab('lobby');
+  };
+
+  // 2. Real player joins room via PIN
+  const handleJoinGameFromPin = ({ pin, nickname, avatar }) => {
+    socket.emit('join_room', {
+      pin,
+      name: nickname,
+      avatar
+    }, (res) => {
+      if (res && res.success) {
+        setRoomPin(pin);
+        setIsHost(false);
+        setLobbyPlayers(res.players);
+        setIsJoinModalOpen(false);
+        setCurrentTab('lobby');
+      } else {
+        alert(res?.message || "Xonaga ulanib bo'lmadi!");
+      }
+    });
+  };
+
+  // 3. Solo Practice (vs self)
+  const handlePlaySolo = (quiz) => {
+    setActiveQuiz(quiz);
+    setIsHost(true);
+    setLobbyPlayers([
+      { id: user.id, name: user.name, avatar: user.avatar, isHost: true, score: 0 }
+    ]);
+    setCurrentTab('gameplay');
+  };
+
+  // 4. Host starts game
+  const handleStartGameFromLobby = () => {
+    if (hostSecret) {
+      socket.emit('host_start_game', { pin: roomPin, hostSecret });
+    }
+    setCurrentTab('gameplay');
+  };
+
+  // 5. Finish Game
+  const handleFinishGame = (scores) => {
+    setFinalScores(scores);
+    const isWinner = scores[0]?.name === user.name;
+    const gainedXp = isWinner ? 1000 : 400;
+    const gainedCoins = isWinner ? 50 : 15;
+
+    setUser(prev => ({
+      ...prev,
+      xp: prev.xp + gainedXp,
+      coins: prev.coins + gainedCoins,
+      wins: isWinner ? (prev.wins || 0) + 1 : (prev.wins || 0),
+      level: Math.floor((prev.xp + gainedXp) / 1000) + 1
+    }));
+
+    setCurrentTab('podium');
+  };
+
+  // Quiz Authoring Actions
+  const handleSaveQuiz = (newQuiz) => {
+    const existingIdx = customQuizzes.findIndex(q => q.id === newQuiz.id);
+    if (existingIdx >= 0) {
+      const updated = [...customQuizzes];
+      updated[existingIdx] = newQuiz;
+      setCustomQuizzes(updated);
+    } else {
+      setCustomQuizzes([newQuiz, ...customQuizzes]);
+    }
+  };
+
+  const handleSaveAndPlay = (newQuiz) => {
+    handleSaveQuiz(newQuiz);
+    handlePlaySolo(newQuiz);
+  };
+
+  const handleEditQuiz = (quiz) => {
+    setEditingQuiz(quiz);
+    setCurrentTab('create');
+  };
+
+  const handleDeleteQuiz = (id) => {
+    if (window.confirm("Haqiqatan ham ushbu quizni o'chirmoqchimisiz?")) {
+      soundManager.playClick();
+      setCustomQuizzes(prev => prev.filter(q => q.id !== id));
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#090c15' }}>
+      {/* Top Navbar */}
+      {currentTab !== 'gameplay' && (
+        <Navbar
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+          user={user}
+          onOpenJoinModal={() => setIsJoinModalOpen(true)}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          isMuted={isMuted}
+          setIsMuted={setIsMuted}
+        />
+      )}
 
-      <div className="ticks"></div>
+      {/* Main Content */}
+      <main style={{ flex: 1 }}>
+        {currentTab === 'home' && (
+          <HomeView
+            quizzes={allQuizzes}
+            user={user}
+            onPlaySolo={handlePlaySolo}
+            onHostLobby={handleHostLobby}
+            onOpenJoinModal={() => setIsJoinModalOpen(true)}
+            onGoToCreate={() => {
+              setEditingQuiz(null);
+              setCurrentTab('create');
+            }}
+            onGoToExplore={() => setCurrentTab('explore')}
+            onGoToLeaderboard={() => setCurrentTab('leaderboard')}
+          />
+        )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {currentTab === 'explore' && (
+          <ExploreView
+            quizzes={allQuizzes}
+            onPlaySolo={handlePlaySolo}
+            onHostLobby={handleHostLobby}
+          />
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {currentTab === 'create' && (
+          <CreateQuizView
+            initialQuiz={editingQuiz}
+            onSaveQuiz={handleSaveQuiz}
+            onSaveAndPlay={handleSaveAndPlay}
+          />
+        )}
+
+        {currentTab === 'lobby' && (
+          <LobbyView
+            quiz={activeQuiz}
+            roomPin={roomPin}
+            players={lobbyPlayers}
+            isHost={isHost}
+            onStartGame={handleStartGameFromLobby}
+            onLeaveLobby={() => setCurrentTab('home')}
+            onRemovePlayer={(id) => setLobbyPlayers(prev => prev.filter(p => p.id !== id))}
+          />
+        )}
+
+        {currentTab === 'gameplay' && (
+          <GamePlayView
+            quiz={activeQuiz}
+            players={lobbyPlayers}
+            user={user}
+            onFinishGame={handleFinishGame}
+          />
+        )}
+
+        {currentTab === 'podium' && (
+          <PodiumView
+            quiz={activeQuiz}
+            finalScores={finalScores}
+            user={user}
+            onPlayAgain={() => handlePlaySolo(activeQuiz)}
+            onGoHome={() => setCurrentTab('home')}
+            onGoExplore={() => setCurrentTab('explore')}
+          />
+        )}
+
+        {currentTab === 'leaderboard' && (
+          <LeaderboardView user={user} />
+        )}
+
+        {currentTab === 'profile' && (
+          <ProfileView
+            user={user}
+            myQuizzes={customQuizzes}
+            onPlaySolo={handlePlaySolo}
+            onHostLobby={handleHostLobby}
+            onEditQuiz={handleEditQuiz}
+            onDeleteQuiz={handleDeleteQuiz}
+            onGoToCreate={() => {
+              setEditingQuiz(null);
+              setCurrentTab('create');
+            }}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          />
+        )}
+      </main>
+
+      {/* Footer */}
+      {currentTab !== 'gameplay' && (
+        <footer style={{
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(9, 12, 21, 0.95)',
+          padding: '24px 20px',
+          textAlign: 'center',
+          color: '#64748b',
+          fontSize: '13px'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚡</span>
+              <span style={{ fontWeight: '800', color: '#f8fafc' }}>KAHOTBEK</span>
+              <span>— O'zbekistondagi №1 Interaktiv Real-Time Quiz Platformasi</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#10b981', fontWeight: '700' }}>🛡️ 100% Xavfsiz Server</span>
+              <span>•</span>
+              <a href="https://t.me/kahoooooooot_bot" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '700' }}>
+                @kahoooooooot_bot
+              </a>
+            </div>
+          </div>
+        </footer>
+      )}
+
+      {/* Modals */}
+      <JoinModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onJoinGame={handleJoinGameFromPin}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        user={user}
+        onUpdateUser={setUser}
+      />
+    </div>
+  );
 }
-
-export default App

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: kahotbek
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8953428165:AAHZeAOhRq0Y7nL6D9Fqg80T1KznaY5WwOM
+      - key: TELEGRAM_BOT_USERNAME
+        value: kahoooooooot_bot
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3001

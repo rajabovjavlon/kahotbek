@@ -1,4 +1,3 @@
-import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -13,43 +12,69 @@ export function generate5DigitCode() {
   return Math.floor(10000 + Math.random() * 90000).toString();
 }
 
-let bot = null;
-
-try {
-  bot = new TelegramBot(token, { polling: true });
-
-  // Handle polling errors safely so server never crashes
-  bot.on('polling_error', (error) => {
-    console.warn('[Telegram Bot Warning]:', error.message || error);
-  });
-
-  // /start or /code command
-  bot.onText(/\/start|\/login|\/code/, (msg) => {
-    const chatId = msg.chat.id;
-    const firstName = msg.from.first_name || 'Bilimdon';
-    const username = msg.from.username ? `@${msg.from.username}` : firstName;
-
-    // Generate 5-digit code
-    const code = generate5DigitCode();
-    const now = Date.now();
-    const expiresAt = now + 10 * 60 * 1000; // 10 minutes
-
-    verificationCodes.set(code, {
-      telegramId: chatId,
-      username: username,
-      firstName: firstName,
-      createdAt: now,
-      expiresAt: expiresAt
+// Native Telegram API helper using standard fetch (Zero external dependency bugs!)
+async function callTelegramApi(method, body = {}) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
+    return await res.json();
+  } catch (err) {
+    console.warn(`[Telegram API Error in ${method}]:`, err.message);
+    return null;
+  }
+}
 
-    // Cleanup expired codes
-    for (const [k, v] of verificationCodes.entries()) {
-      if (v.expiresAt < now) {
-        verificationCodes.delete(k);
-      }
-    }
+// Polling loop for Telegram updates
+let lastUpdateId = 0;
+let isPolling = false;
 
-    const welcomeMsg = 
+async function pollTelegramUpdates() {
+  if (isPolling) return;
+  isPolling = true;
+
+  while (true) {
+    try {
+      const data = await callTelegramApi('getUpdates', {
+        offset: lastUpdateId + 1,
+        timeout: 25,
+        allowed_updates: ['message']
+      });
+
+      if (data && data.ok && Array.isArray(data.result)) {
+        for (const update of data.result) {
+          lastUpdateId = update.update_id;
+          const msg = update.message;
+          if (!msg || !msg.text) continue;
+
+          const chatId = msg.chat.id;
+          const firstName = msg.from.first_name || 'Bilimdon';
+          const username = msg.from.username ? `@${msg.from.username}` : firstName;
+          const text = msg.text.trim();
+
+          if (text.startsWith('/start') || text.startsWith('/login') || text.startsWith('/code')) {
+            const code = generate5DigitCode();
+            const now = Date.now();
+            const expiresAt = now + 10 * 60 * 1000; // 10 minutes
+
+            verificationCodes.set(code, {
+              telegramId: chatId,
+              username: username,
+              firstName: firstName,
+              createdAt: now,
+              expiresAt: expiresAt
+            });
+
+            // Cleanup expired codes
+            for (const [k, v] of verificationCodes.entries()) {
+              if (v.expiresAt < now) {
+                verificationCodes.delete(k);
+              }
+            }
+
+            const welcomeMsg = 
 `⚡ *KAHOTBEK PLATFORMASIGA XUSH KELIBSIZ!* ⚡
 
 Salom, *${firstName}*! Siz o'yinlar va viktorinalar maydoniga kirish uchun so'rov yubordingiz.
@@ -60,29 +85,30 @@ Salom, *${firstName}*! Siz o'yinlar va viktorinalar maydoniga kirish uchun so'ro
 🌐 Ushbu kodni saytga (*Kahotbek*) kiriting va hisobingiz bilan o'yinlarga qo'shiling!
 ⏱ _Kod 10 daqiqa davomida amal qiladi._`;
 
-    bot.sendMessage(chatId, welcomeMsg, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "🎮 Saytga O'tish", url: "https://kahoooooooot-bot.render.com" }
-          ]
-        ]
+            await callTelegramApi('sendMessage', {
+              chat_id: chatId,
+              text: welcomeMsg,
+              parse_mode: 'Markdown'
+            });
+          } else {
+            await callTelegramApi('sendMessage', {
+              chat_id: chatId,
+              text: "🔐 Kirish kodi olish uchun /start buyrug'ini bosing!"
+            });
+          }
+        }
       }
-    }).catch(err => console.error("Error sending bot message:", err));
-  });
-
-  // Echo any text message with a code reminder
-  bot.on('message', (msg) => {
-    if (msg.text && !msg.text.startsWith('/')) {
-      const chatId = msg.chat.id;
-      bot.sendMessage(chatId, "🔐 Kirish kodi olish uchun /start buyrug'ini bosing!");
+    } catch (e) {
+      // Wait 3 seconds before retry if network glitch
+      await new Promise(r => setTimeout(r, 3000));
     }
-  });
+  }
+}
 
+// Start polling in background if in server environment
+if (typeof process !== 'undefined' && process.env) {
+  pollTelegramUpdates().catch(e => console.warn(e));
   console.log(`[Telegram Bot] @${botUsername} successfully started listening for authentication codes!`);
-} catch (e) {
-  console.warn('[Telegram Bot init error]:', e);
 }
 
 // Function to verify 5 digit code from REST API
@@ -114,8 +140,12 @@ export function verifyTelegramCode(code) {
   };
 }
 
-export function sendTelegramGameNotification(telegramId, text) {
-  if (bot && telegramId) {
-    bot.sendMessage(telegramId, text, { parse_mode: 'Markdown' }).catch(err => console.warn(err));
+export async function sendTelegramGameNotification(telegramId, text) {
+  if (telegramId && text) {
+    await callTelegramApi('sendMessage', {
+      chat_id: telegramId,
+      text: text,
+      parse_mode: 'Markdown'
+    });
   }
 }

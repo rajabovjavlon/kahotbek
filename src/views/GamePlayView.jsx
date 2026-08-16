@@ -1,32 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Clock, 
   Flame, 
   Check, 
   X, 
-  Trophy, 
-  Zap, 
   Sparkles,
-  ArrowRight
+  MessageSquare,
+  Eye,
+  Flag,
+  Users
 } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 import { fireQuickStreakConfetti } from '../utils/confetti';
+import LiveChat from '../components/LiveChat';
+import { socket } from '../utils/socket';
+import { SHOP_ITEMS } from '../data/shopItems';
 
 const SHAPES = [
-  { shape: '▲', color: '#ef4444', name: 'Qizil Uchburchak' },
-  { shape: '◆', color: '#3b82f6', name: "Ko'k Romb" },
-  { shape: '●', color: '#f59e0b', name: 'Sariq Aylana' },
-  { shape: '■', color: '#10b981', name: 'Yashil Kvadrat' },
+  { shape: '▲', color: '#dc2626', name: 'Qizil' },
+  { shape: '◆', color: '#2563eb', name: "Ko'k" },
+  { shape: '●', color: '#d97706', name: 'Sariq' },
+  { shape: '■', color: '#059669', name: 'Yashil' },
 ];
 
 export default function GamePlayView({
   quiz,
   players = [],
   user,
+  roomPin = '',
+  isSpectator = false,
+  gameMode = 'race', // 'race' or 'teams'
   onFinishGame
 }) {
   const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [phase, setPhase] = useState('intro'); // 'intro', 'question', 'revealed'
+  const [phase, setPhase] = useState('intro');
   const [introCount, setIntroCount] = useState(3);
   
   const currentQuestion = quiz.questions[currentQIndex] || quiz.questions[0];
@@ -38,10 +44,56 @@ export default function GamePlayView({
   const [maxStreak, setMaxStreak] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  
+  // Track Steps (Yo'lda yurish 1 qadam)
+  const [myStep, setMyStep] = useState(0);
+  const [activeTrails, setActiveTrails] = useState({}); // { [playerId]: trailEffectId }
+  const [playerSteps, setPlayerSteps] = useState(() => {
+    const map = {};
+    players.forEach(p => { map[p.id || p.name] = 0; });
+    map[user.id || user.name] = 0;
+    return map;
+  });
 
-  // Auto transition timer ref
+  // Chat sidebar toggle
+  const [isChatOpen, setIsChatOpen] = useState(true);
+
   const autoNextTimerRef = useRef(null);
   const hasAnsweredRef = useRef(false);
+
+  // Get active trail effect info
+  const equippedTrailId = user.equippedTrail || 'trail_fire';
+  const currentTrailItem = SHOP_ITEMS.find(it => it.id === equippedTrailId) || SHOP_ITEMS[0];
+
+  // Socket listener for other players' steps on the track
+  useEffect(() => {
+    const handlePlayerStep = (data) => {
+      setPlayerSteps((prev) => ({
+        ...prev,
+        [data.playerId || data.playerName]: data.newStep
+      }));
+
+      // Trigger trail animation
+      setActiveTrails((prev) => ({
+        ...prev,
+        [data.playerId || data.playerName]: data.trailEffect
+      }));
+
+      setTimeout(() => {
+        setActiveTrails((prev) => {
+          const next = { ...prev };
+          delete next[data.playerId || data.playerName];
+          return next;
+        });
+      }, 2000);
+    };
+
+    socket.on('player_stepped_forward', handlePlayerStep);
+
+    return () => {
+      socket.off('player_stepped_forward', handlePlayerStep);
+    };
+  }, []);
 
   // 1. Intro 3-2-1 countdown
   useEffect(() => {
@@ -75,13 +127,11 @@ export default function GamePlayView({
         }, 1000);
         return () => clearTimeout(timer);
       } else {
-        // Time ran out! Immediately reveal and auto advance
         handleTimeExpired();
       }
     }
   }, [phase, timeLeft]);
 
-  // Cleanup auto next timer on unmount
   useEffect(() => {
     return () => {
       if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current);
@@ -95,9 +145,8 @@ export default function GamePlayView({
     }
   };
 
-  // User selects an option
   const handleSelectOption = (optIdx) => {
-    if (phase !== 'question' || hasAnsweredRef.current) return;
+    if (phase !== 'question' || hasAnsweredRef.current || isSpectator) return;
     hasAnsweredRef.current = true;
     setSelectedOptionIndex(optIdx);
     soundManager.playSelectAnswer();
@@ -105,12 +154,10 @@ export default function GamePlayView({
     revealAndAutoAdvance(optIdx);
   };
 
-  // Reveal results and automatically advance to next question in 1.8s
   const revealAndAutoAdvance = (userChoice) => {
     const correctIdx = currentQuestion.options.findIndex(o => o.isCorrect);
     const userIsCorrect = userChoice === correctIdx;
     
-    // Calculate points based on speed
     const maxPoints = currentQuestion.points || 1000;
     const timeFactor = Math.max(0, timeLeft / (currentQuestion.timeLimit || 20));
     const earned = userIsCorrect ? Math.round(maxPoints * (0.5 + 0.5 * timeFactor)) : 0;
@@ -121,6 +168,7 @@ export default function GamePlayView({
     let newTotalScore = totalScore;
     let newCorrectCount = correctCount;
     let newStreak = streak;
+    let newStep = myStep;
 
     if (userIsCorrect) {
       soundManager.playCorrect();
@@ -131,6 +179,37 @@ export default function GamePlayView({
       setCorrectCount(newCorrectCount);
       newTotalScore = totalScore + earned;
       setTotalScore(newTotalScore);
+      
+      // Advance 1 step forward on track road
+      newStep = myStep + 1;
+      setMyStep(newStep);
+      setPlayerSteps((prev) => ({
+        ...prev,
+        [user.id || user.name]: newStep
+      }));
+
+      // Trigger own trail animation
+      setActiveTrails((prev) => ({
+        ...prev,
+        [user.id || user.name]: equippedTrailId
+      }));
+
+      setTimeout(() => {
+        setActiveTrails((prev) => {
+          const next = { ...prev };
+          delete next[user.id || user.name];
+          return next;
+        });
+      }, 2000);
+
+      // Emit to server
+      if (roomPin) {
+        socket.emit('submit_answer', {
+          pin: roomPin,
+          optionIndex: userChoice,
+          trailEffect: equippedTrailId
+        });
+      }
 
       if (newStreak >= 2) {
         fireQuickStreakConfetti();
@@ -143,14 +222,12 @@ export default function GamePlayView({
 
     setPhase('revealed');
 
-    // AUTOMATIC FAST TRANSITION TO NEXT QUESTION (1.8s)
     autoNextTimerRef.current = setTimeout(() => {
       if (currentQIndex + 1 < quiz.questions.length) {
         setCurrentQIndex(c => c + 1);
         setIntroCount(3);
         setPhase('intro');
       } else {
-        // Game ended! Go to Victory Podium with exact stats
         soundManager.playFanfare();
         const finalStandings = [
           {
@@ -160,7 +237,8 @@ export default function GamePlayView({
             currentScore: newTotalScore,
             correctCount: newCorrectCount,
             totalQuestions: quiz.questions.length,
-            maxStreak: Math.max(newStreak, maxStreak)
+            maxStreak: Math.max(newStreak, maxStreak),
+            finalStep: newStep
           }
         ];
         onFinishGame(finalStandings);
@@ -168,314 +246,423 @@ export default function GamePlayView({
     }, 1800);
   };
 
-  // 1. INTRO 3-2-1 SCREEN
-  if (phase === 'intro') {
-    return (
-      <div style={{
-        minHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        padding: '20px'
-      }}>
-        <div style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: '#38bdf8',
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          marginBottom: '16px'
-        }}>
-          Savol {currentQIndex + 1} / {quiz.questions.length}
-        </div>
-
-        <div className="anim-pop" style={{
-          fontSize: 'clamp(80px, 15vw, 140px)',
-          fontWeight: '900',
-          background: 'linear-gradient(135deg, #a855f7 0%, #38bdf8 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 0 35px rgba(139, 92, 246, 0.6))',
-          lineHeight: 1,
-          marginBottom: '20px'
-        }}>
-          {introCount}
-        </div>
-
-        <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>
-          Tayyorlaning! Savol kelmoqda...
-        </div>
-      </div>
-    );
-  }
-
-  // 2. MAIN ACTIVE QUESTION & REVEAL SCREEN
   const isRevealed = phase === 'revealed';
+  const totalSteps = quiz.questions.length;
+
+  // Track racers list
+  const trackRacers = players.length > 0 ? players : [
+    { id: user.id || user.name, name: user.name, avatar: user.avatar || '🦁', isHost: true }
+  ];
 
   return (
     <div style={{
-      maxWidth: '1200px',
+      maxWidth: '1440px',
       margin: '0 auto',
-      padding: '20px 20px 60px',
-      display: 'flex',
-      flexDirection: 'column',
+      padding: '16px 20px 60px',
+      display: 'grid',
+      gridTemplateColumns: isChatOpen ? '1fr 340px' : '1fr',
+      gap: '20px',
       minHeight: '85vh',
-      justifyContent: 'space-between'
+      alignItems: 'start'
     }}>
-      {/* Top Status Bar: Question Number, Circular Timer, Live Score & Streak */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '20px',
-        flexWrap: 'wrap',
-        gap: '12px'
-      }}>
-        {/* Question Counter */}
+      {/* LEFT / CENTER: GAMEPLAY & RACE TRACK */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Top Status Bar */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: '8px 16px',
-          borderRadius: '14px',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
-        }}>
-          <span style={{ fontSize: '18px' }}>⚡</span>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#fff' }}>
-            Savol {currentQIndex + 1} / {quiz.questions.length}
-          </span>
-        </div>
-
-        {/* Circular Countdown Timer */}
-        <div style={{
-          position: 'relative',
-          width: '74px',
-          height: '74px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-            <circle
-              cx="37"
-              cy="37"
-              r="30"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="6"
-              fill="transparent"
-            />
-            <circle
-              cx="37"
-              cy="37"
-              r="30"
-              stroke={timeLeft <= 5 ? '#ef4444' : '#06b6d4'}
-              strokeWidth="6"
-              fill="transparent"
-              strokeDasharray="188.4"
-              strokeDashoffset={188.4 * (1 - timeLeft / (currentQuestion.timeLimit || 20))}
-              style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease' }}
-            />
-          </svg>
-          <span style={{
-            position: 'absolute',
-            fontSize: '22px',
-            fontWeight: '900',
-            fontFamily: 'var(--font-mono)',
-            color: timeLeft <= 5 ? '#ef4444' : '#fff'
-          }}>
-            {timeLeft}
-          </span>
-        </div>
-
-        {/* Live Score and Streak */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: '8px 16px',
-          borderRadius: '14px',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
-        }}>
-          {streak >= 2 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f97316', fontWeight: '800', fontSize: '13px' }}>
-              <Flame size={16} fill="#f97316" />
-              <span>{streak}x Combo</span>
-            </div>
-          )}
-          <div style={{ fontSize: '15px', fontWeight: '800', color: '#38bdf8' }}>
-            {totalScore.toLocaleString()} ball
-          </div>
-        </div>
-      </div>
-
-      {/* Main Question Box */}
-      <div className="glass-panel anim-fade" style={{
-        padding: '36px 28px',
-        borderRadius: '26px',
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, rgba(17, 22, 37, 0.95), rgba(15, 23, 42, 0.95))',
-        border: '1px solid rgba(139, 92, 246, 0.25)',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-        marginBottom: '24px'
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(20px, 4vw, 30px)',
-          fontWeight: '900',
-          color: '#ffffff',
-          lineHeight: 1.35,
-          maxWidth: '900px',
-          margin: '0 auto'
-        }}>
-          {currentQuestion.question}
-        </h2>
-      </div>
-
-      {/* Fast Result Feedback Banner */}
-      {isRevealed && (
-        <div className="anim-pop" style={{
-          padding: '16px 24px',
-          borderRadius: '18px',
-          background: isAnswerCorrect 
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.4))'
-            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.4))',
-          border: `2px solid ${isAnswerCorrect ? '#10b981' : '#ef4444'}`,
-          marginBottom: '20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: isAnswerCorrect ? '#10b981' : '#ef4444',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px'
+          {/* Question Counter */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#121826',
+            padding: '8px 14px',
+            borderRadius: '12px',
+            border: '1px solid #1e283d'
+          }}>
+            <span style={{ fontSize: '16px' }}>⚡</span>
+            <span style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff' }}>
+              Savol {currentQIndex + 1} / {quiz.questions.length}
+            </span>
+          </div>
+
+          {/* Circular Countdown Timer */}
+          <div style={{
+            position: 'relative',
+            width: '64px',
+            height: '64px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                stroke="#1e283d"
+                strokeWidth="5"
+                fill="transparent"
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                stroke={timeLeft <= 5 ? '#ef4444' : '#0284c7'}
+                strokeWidth="5"
+                fill="transparent"
+                strokeDasharray="163.3"
+                strokeDashoffset={163.3 * (1 - timeLeft / (currentQuestion.timeLimit || 20))}
+                style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease' }}
+              />
+            </svg>
+            <span style={{
+              position: 'absolute',
+              fontSize: '18px',
+              fontWeight: '900',
+              fontFamily: 'var(--font-mono)',
+              color: timeLeft <= 5 ? '#ef4444' : '#ffffff'
             }}>
-              {isAnswerCorrect ? <Check size={26} /> : <X size={26} />}
-            </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: '900', color: '#fff' }}>
-                {isAnswerCorrect ? `To'g'ri Javob! (+${pointsEarned} Ball)` : "Noto'g'ri Javob!"}
-              </div>
-              {currentQuestion.explanation && (
-                <div style={{ fontSize: '13px', color: '#e2e8f0', marginTop: '2px' }}>
-                  💡 {currentQuestion.explanation}
-                </div>
-              )}
-            </div>
+              {timeLeft}
+            </span>
           </div>
 
-          <div style={{ fontSize: '12px', color: '#a7f3d0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Sparkles size={14} />
-            <span>Keyingi savolga o'tilmoqda...</span>
-          </div>
-        </div>
-      )}
-
-      {/* 4 Colored Kahoot Answer Buttons */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '16px',
-        marginBottom: '10px'
-      }}>
-        {currentQuestion.options.map((opt, idx) => {
-          const shapeInfo = SHAPES[idx] || SHAPES[0];
-          const isSelected = selectedOptionIndex === idx;
-          const isCorrect = opt.isCorrect;
-
-          let btnBg = shapeInfo.color;
-          let opacity = 1;
-          let transform = 'none';
-          let border = 'none';
-
-          if (isRevealed) {
-            if (isCorrect) {
-              btnBg = shapeInfo.color;
-              border = '3px solid #ffffff';
-              transform = 'scale(1.02)';
-            } else {
-              opacity = 0.35;
-            }
-          } else if (selectedOptionIndex !== null) {
-            if (isSelected) {
-              border = '3px solid #ffffff';
-              transform = 'scale(1.02)';
-            } else {
-              opacity = 0.5;
-            }
-          }
-
-          return (
-            <button
-              key={idx}
-              onClick={() => handleSelectOption(idx)}
-              disabled={isRevealed || selectedOptionIndex !== null}
-              style={{
-                background: btnBg,
-                opacity,
-                transform,
-                border,
-                borderRadius: '20px',
-                padding: '22px 20px',
-                color: '#ffffff',
+          {/* Live Score, Streak & Chat toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {streak >= 2 && (
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                textAlign: 'left',
-                boxShadow: `0 8px 25px ${shapeInfo.color}40`,
-                cursor: (isRevealed || selectedOptionIndex !== null) ? 'default' : 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                minHeight: '90px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-                <span style={{
-                  fontSize: '28px',
-                  fontWeight: '900',
-                  lineHeight: 1,
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                }}>
-                  {shapeInfo.shape}
-                </span>
-                <span style={{
-                  fontSize: '18px',
-                  fontWeight: '800',
-                  lineHeight: 1.3
-                }}>
-                  {opt.text}
-                </span>
+                gap: '4px',
+                color: '#f59e0b',
+                fontWeight: '800',
+                fontSize: '12px',
+                background: '#121826',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                border: '1px solid #1e283d'
+              }}>
+                <Flame size={15} fill="#f59e0b" />
+                <span>{streak}x Combo</span>
               </div>
+            )}
 
-              {isRevealed && isCorrect && (
-                <div style={{
+            <div style={{
+              fontSize: '14px',
+              fontWeight: '800',
+              color: '#38bdf8',
+              background: '#121826',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: '1px solid #1e283d'
+            }}>
+              {totalScore.toLocaleString()} ball
+            </div>
+
+            <button
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className="btn-solid-secondary"
+              style={{ padding: '8px 12px', borderRadius: '10px' }}
+              title="Chatni ko'rsatish/yashirish"
+            >
+              <MessageSquare size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* 🛣️ INTERACTIVE RACE TRACK / TEAM ROAD (Yo'l & Qadam Yurish) */}
+        <div style={{
+          background: '#121826',
+          border: '1px solid #1e283d',
+          borderRadius: '18px',
+          padding: '16px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px',
+            paddingBottom: '8px',
+            borderBottom: '1px solid #1e283d'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '800', color: '#cbd5e1' }}>
+              <span>🏁</span>
+              <span>Poyga Yo'li (Har to'g'ri javob = 1 qadam oldinga)</span>
+            </div>
+            <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Effektingiz:</span>
+              <span style={{ color: currentTrailItem.color, fontWeight: '800' }}>
+                {currentTrailItem.icon} {currentTrailItem.name}
+              </span>
+            </div>
+          </div>
+
+          {/* Track Road Lanes */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {trackRacers.map((racer) => {
+              const currentStep = playerSteps[racer.id || racer.name] || 0;
+              const stepPercent = Math.min((currentStep / totalSteps) * 90, 90);
+              const isMoving = !!activeTrails[racer.id || racer.name];
+              const isMe = racer.name === user.name;
+
+              return (
+                <div
+                  key={racer.id || racer.name}
+                  style={{
+                    position: 'relative',
+                    height: '48px',
+                    background: '#0e1422',
+                    borderRadius: '12px',
+                    border: '1px solid #1e283d',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 12px'
+                  }}
+                >
+                  {/* Road Asphalt lines */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: '0 40px',
+                    borderBottom: '2px dashed #222d42',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none'
+                  }} />
+
+                  {/* Finish Line Flag */}
+                  <div style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '20px'
+                  }}>
+                    🏁
+                  </div>
+
+                  {/* Racer Character Token with Trail Effect */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `calc(12px + ${stepPercent}%)`,
+                      transition: 'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      zIndex: 5
+                    }}
+                  >
+                    {/* Animated Trail Sparks when stepping */}
+                    {isMoving && (
+                      <div className="anim-pop" style={{
+                        display: 'flex',
+                        gap: '2px',
+                        fontSize: '18px',
+                        animation: 'fadeIn 0.5s ease infinite alternate'
+                      }}>
+                        {currentTrailItem.particle} {currentTrailItem.particle}
+                      </div>
+                    )}
+
+                    <div style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '10px',
+                      background: isMe ? '#4f46e5' : '#182234',
+                      border: isMe ? '2px solid #818cf8' : '1px solid #222d42',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      boxShadow: isMoving ? `0 0 15px ${currentTrailItem.color}` : 'none'
+                    }}>
+                      {racer.avatar || '🦁'}
+                    </div>
+
+                    <div style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      color: isMe ? '#818cf8' : '#f8fafc',
+                      background: 'rgba(14, 20, 34, 0.9)',
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                      border: '1px solid #1e283d',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {racer.name} ({currentStep}/{totalSteps})
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Question Text Box */}
+        <div style={{
+          padding: '26px 20px',
+          borderRadius: '18px',
+          textAlign: 'center',
+          background: '#121826',
+          border: '1px solid #1e283d'
+        }}>
+          <h2 style={{
+            fontSize: 'clamp(17px, 3.2vw, 24px)',
+            fontWeight: '900',
+            color: '#ffffff',
+            lineHeight: 1.35,
+            maxWidth: '800px',
+            margin: '0 auto'
+          }}>
+            {currentQuestion.question}
+          </h2>
+        </div>
+
+        {/* Result Feedback Banner */}
+        {isRevealed && (
+          <div className="anim-pop" style={{
+            padding: '12px 18px',
+            borderRadius: '12px',
+            background: isAnswerCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            border: `1px solid ${isAnswerCorrect ? '#10b981' : '#ef4444'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: isAnswerCorrect ? '#10b981' : '#ef4444',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px'
+              }}>
+                {isAnswerCorrect ? <Check size={20} /> : <X size={20} />}
+              </div>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff' }}>
+                  {isAnswerCorrect ? `To'g'ri Javob! (+${pointsEarned} Ball • +1 Qadam Oldinga)` : "Noto'g'ri Javob!"}
+                </div>
+                {currentQuestion.explanation && (
+                  <div style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
+                    💡 {currentQuestion.explanation}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ fontSize: '12px', color: '#34d399', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Sparkles size={13} />
+              <span>Keyingi savolga o'tilmoqda...</span>
+            </div>
+          </div>
+        )}
+
+        {/* 4 Solid Colored Kahoot Answer Buttons */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+          marginBottom: '10px'
+        }}>
+          {currentQuestion.options.map((opt, idx) => {
+            const shapeInfo = SHAPES[idx] || SHAPES[0];
+            const isSelected = selectedOptionIndex === idx;
+            const isCorrect = opt.isCorrect;
+
+            let btnBg = shapeInfo.color;
+            let opacity = 1;
+            let border = 'none';
+
+            if (isRevealed) {
+              if (isCorrect) {
+                btnBg = shapeInfo.color;
+                border = '2px solid #ffffff';
+              } else {
+                opacity = 0.3;
+              }
+            } else if (selectedOptionIndex !== null) {
+              if (isSelected) {
+                border = '2px solid #ffffff';
+              } else {
+                opacity = 0.45;
+              }
+            }
+
+            return (
+              <button
+                key={idx}
+                onClick={() => handleSelectOption(idx)}
+                disabled={isRevealed || selectedOptionIndex !== null || isSpectator}
+                style={{
+                  background: btnBg,
+                  opacity,
+                  border,
+                  borderRadius: '14px',
+                  padding: '18px 16px',
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(0,0,0,0.4)',
-                  padding: '4px 10px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: '800',
-                  color: '#4ade80'
-                }}>
-                  <Check size={18} />
+                  justifyContent: 'space-between',
+                  textAlign: 'left',
+                  cursor: (isRevealed || selectedOptionIndex !== null || isSpectator) ? 'default' : 'pointer',
+                  minHeight: '76px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                  <span style={{ fontSize: '22px', fontWeight: '900', lineHeight: 1 }}>
+                    {shapeInfo.shape}
+                  </span>
+                  <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: 1.3 }}>
+                    {opt.text}
+                  </span>
                 </div>
-              )}
-            </button>
-          );
-        })}
+
+                {isRevealed && isCorrect && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: 'rgba(0,0,0,0.4)',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    color: '#4ade80'
+                  }}>
+                    <Check size={16} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* RIGHT: LIVE REAL-TIME CHAT SIDEBAR */}
+      {isChatOpen && (
+        <div style={{ height: '700px', position: 'sticky', top: '80px' }}>
+          <LiveChat
+            roomPin={roomPin}
+            currentUser={user}
+            isHost={user.isHost}
+            isSpectator={isSpectator}
+            onClose={() => setIsChatOpen(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

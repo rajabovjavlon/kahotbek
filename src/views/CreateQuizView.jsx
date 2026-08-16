@@ -4,14 +4,10 @@ import {
   Trash2, 
   Copy, 
   Clock, 
-  Award, 
   Save, 
   Play, 
-  Sparkles, 
-  Layers, 
   CheckCircle, 
   HelpCircle,
-  Image as ImageIcon,
   Check,
   AlertCircle
 } from 'lucide-react';
@@ -19,10 +15,10 @@ import { CATEGORIES } from '../data/defaultQuizzes';
 import { soundManager } from '../utils/sounds';
 
 const ANSWER_COLORS = [
-  { bg: '#ef4444', name: 'Qizil', shape: '▲' },
-  { bg: '#3b82f6', name: "Ko'k", shape: '◆' },
-  { bg: '#f59e0b', name: 'Sariq', shape: '●' },
-  { bg: '#10b981', name: 'Yashil', shape: '■' },
+  { bg: '#dc2626', name: 'Qizil', shape: '▲' },
+  { bg: '#2563eb', name: "Ko'k", shape: '◆' },
+  { bg: '#d97706', name: 'Sariq', shape: '●' },
+  { bg: '#059669', name: 'Yashil', shape: '■' },
 ];
 
 export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz = null }) {
@@ -41,10 +37,10 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
       type: 'multiple',
       explanation: "Savol bo'yicha qisqacha izoh...",
       options: [
-        { text: 'Variant A', isCorrect: true, color: '#ef4444', shape: 'triangle' },
-        { text: 'Variant B', isCorrect: false, color: '#3b82f6', shape: 'diamond' },
-        { text: 'Variant C', isCorrect: false, color: '#f59e0b', shape: 'circle' },
-        { text: 'Variant D', isCorrect: false, color: '#10b981', shape: 'square' },
+        { text: 'Variant A', isCorrect: true, color: '#dc2626', shape: 'triangle' },
+        { text: 'Variant B', isCorrect: false, color: '#2563eb', shape: 'diamond' },
+        { text: 'Variant C', isCorrect: false, color: '#d97706', shape: 'circle' },
+        { text: 'Variant D', isCorrect: false, color: '#059669', shape: 'square' },
       ]
     }
   ]);
@@ -66,10 +62,10 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
       type: 'multiple',
       explanation: '',
       options: [
-        { text: 'Variant 1', isCorrect: true, color: '#ef4444', shape: 'triangle' },
-        { text: 'Variant 2', isCorrect: false, color: '#3b82f6', shape: 'diamond' },
-        { text: 'Variant 3', isCorrect: false, color: '#f59e0b', shape: 'circle' },
-        { text: 'Variant 4', isCorrect: false, color: '#10b981', shape: 'square' },
+        { text: 'Variant 1', isCorrect: true, color: '#dc2626', shape: 'triangle' },
+        { text: 'Variant 2', isCorrect: false, color: '#2563eb', shape: 'diamond' },
+        { text: 'Variant 3', isCorrect: false, color: '#d97706', shape: 'circle' },
+        { text: 'Variant 4', isCorrect: false, color: '#059669', shape: 'square' },
       ]
     };
     setQuestions([...questions, newQ]);
@@ -114,12 +110,11 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
     const opts = [...updated[activeQuestionIndex].options];
     
     if (field === 'isCorrect') {
-      // Toggle or make single correct
       opts.forEach((o, i) => {
         if (i === optIdx) {
           o.isCorrect = value;
         } else {
-          o.isCorrect = false; // Single correct kahoot style
+          o.isCorrect = false;
         }
       });
     } else {
@@ -133,7 +128,7 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
   // Validate and Build Quiz Object
   const validateAndBuildQuiz = () => {
     if (!title.trim()) {
-      setError("Iltimos, quiz sarlavhasini (nomini) kiriting!");
+      setError("Iltimos, quiz nomini kiriting!");
       return null;
     }
 
@@ -154,7 +149,7 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
     return {
       id: initialQuiz?.id || `user-quiz-${Date.now()}`,
       title: title.trim(),
-      description: description.trim() || 'Foydalanuvchi tomonidan yaratilgan maxsus quiz',
+      description: description.trim() || 'Foydalanuvchi tomonidan yaratilgan quiz',
       category,
       difficulty,
       playsCount: initialQuiz?.playsCount || 0,
@@ -162,7 +157,6 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
       author: 'Siz',
       authorAvatar: icon,
       icon,
-      coverGradient: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
       questions,
       createdAt: new Date().toISOString()
     };
@@ -193,17 +187,17 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '16px',
-        marginBottom: '24px'
+        marginBottom: '22px'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '28px' }}>🎨</span>
-            <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#fff' }}>
-              Kahoot Quiz Yaratish Studiyasi
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '24px' }}>🎨</span>
+            <h1 style={{ fontSize: '26px', fontWeight: '900', color: '#ffffff' }}>
+              Quiz Yaratish Studiyasi
             </h1>
           </div>
-          <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>
-            Savollar, javob variantlari va taymerlarni erkin sozlang
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>
+            Savollar, javob variantlari va taymerlarni sozlang
           </p>
         </div>
 
@@ -211,19 +205,19 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={handleSave}
-            className="btn-glass"
-            style={{ padding: '10px 20px', borderRadius: '12px' }}
+            className="btn-solid-secondary"
+            style={{ padding: '9px 18px', borderRadius: '10px' }}
           >
-            <Save size={16} />
+            <Save size={15} />
             <span>Saqlash</span>
           </button>
 
           <button
             onClick={handleSaveAndStart}
-            className="btn-neon-primary"
-            style={{ padding: '10px 22px', borderRadius: '12px' }}
+            className="btn-solid-primary"
+            style={{ padding: '9px 20px', borderRadius: '10px' }}
           >
-            <Play size={16} fill="#fff" />
+            <Play size={15} fill="#fff" />
             <span>Saqlash va O'ynash</span>
           </button>
         </div>
@@ -231,49 +225,53 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
 
       {error && (
         <div style={{
-          background: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid rgba(239, 68, 68, 0.4)',
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
           color: '#fca5a5',
-          padding: '12px 18px',
-          borderRadius: '14px',
-          marginBottom: '20px',
+          padding: '10px 16px',
+          borderRadius: '12px',
+          marginBottom: '18px',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px'
+          gap: '10px',
+          fontSize: '13px'
         }}>
-          <AlertCircle size={20} color="#ef4444" />
+          <AlertCircle size={18} color="#ef4444" />
           <span>{error}</span>
         </div>
       )}
 
       {successMessage && (
         <div style={{
-          background: 'rgba(16, 185, 129, 0.15)',
-          border: '1px solid rgba(16, 185, 129, 0.4)',
+          background: 'rgba(16, 185, 129, 0.12)',
+          border: '1px solid rgba(16, 185, 129, 0.35)',
           color: '#86efac',
-          padding: '12px 18px',
-          borderRadius: '14px',
-          marginBottom: '20px',
+          padding: '10px 16px',
+          borderRadius: '12px',
+          marginBottom: '18px',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px'
+          gap: '10px',
+          fontSize: '13px'
         }}>
-          <CheckCircle size={20} color="#10b981" />
+          <CheckCircle size={18} color="#10b981" />
           <span>{successMessage}</span>
         </div>
       )}
 
-      {/* Main Studio Grid: Left Sidebar (Questions), Center (Question Editor), Right (Settings) */}
+      {/* Main Studio Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '260px 1fr 300px',
-        gap: '20px',
+        gridTemplateColumns: '250px 1fr 280px',
+        gap: '18px',
         alignItems: 'start'
       }}>
         {/* Left Panel: Questions List */}
-        <div className="glass-panel" style={{
-          padding: '16px',
-          borderRadius: '20px',
+        <div style={{
+          background: '#121826',
+          border: '1px solid #1e283d',
+          padding: '14px',
+          borderRadius: '16px',
           maxHeight: 'calc(100vh - 180px)',
           overflowY: 'auto'
         }}>
@@ -281,33 +279,33 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '14px',
-            paddingBottom: '10px',
-            borderBottom: '1px solid rgba(255,255,255,0.08)'
+            marginBottom: '12px',
+            paddingBottom: '8px',
+            borderBottom: '1px solid #1e283d'
           }}>
-            <div style={{ fontSize: '13px', fontWeight: '800', color: '#cbd5e1', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>
               Savollar ({questions.length})
             </div>
             <button
               onClick={handleAddQuestion}
               style={{
-                background: '#8b5cf6',
+                background: '#4f46e5',
                 color: '#fff',
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
+                width: '26px',
+                height: '26px',
+                borderRadius: '7px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
               title="Yangi savol qo'shish"
             >
-              <Plus size={16} />
+              <Plus size={15} />
             </button>
           </div>
 
           {/* Question List Items */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {questions.map((q, idx) => {
               const isActive = activeQuestionIndex === idx;
               return (
@@ -318,17 +316,15 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                     setActiveQuestionIndex(idx);
                   }}
                   style={{
-                    padding: '12px',
-                    borderRadius: '14px',
-                    background: isActive ? 'rgba(139, 92, 246, 0.25)' : 'rgba(255, 255, 255, 0.03)',
-                    border: isActive ? '2px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.06)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'all 0.15s ease'
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: isActive ? '#1c273c' : '#0e1422',
+                    border: isActive ? '2px solid #4f46e5' : '1px solid #1e283d',
+                    cursor: 'pointer'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '800', color: isActive ? '#a855f7' : '#94a3b8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: isActive ? '#818cf8' : '#94a3b8' }}>
                       {idx + 1}-Savol ({q.timeLimit}s)
                     </span>
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -337,33 +333,25 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                           e.stopPropagation();
                           handleDuplicateQuestion(idx);
                         }}
-                        style={{
-                          background: 'transparent',
-                          color: '#94a3b8',
-                          padding: '2px'
-                        }}
+                        style={{ background: 'transparent', color: '#94a3b8', padding: '2px' }}
                         title="Nusxa olish"
                       >
-                        <Copy size={13} />
+                        <Copy size={12} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteQuestion(idx);
                         }}
-                        style={{
-                          background: 'transparent',
-                          color: '#ef4444',
-                          padding: '2px'
-                        }}
+                        style={{ background: 'transparent', color: '#ef4444', padding: '2px' }}
                         title="O'chirish"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   </div>
                   <div style={{
-                    fontSize: '13px',
+                    fontSize: '12px',
                     color: '#f8fafc',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -380,13 +368,13 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
             onClick={handleAddQuestion}
             style={{
               width: '100%',
-              marginTop: '16px',
-              padding: '10px',
-              borderRadius: '12px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px dashed rgba(255,255,255,0.2)',
+              marginTop: '14px',
+              padding: '9px',
+              borderRadius: '10px',
+              background: '#0e1422',
+              border: '1px dashed #283652',
               color: '#38bdf8',
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: '700',
               display: 'flex',
               alignItems: 'center',
@@ -394,31 +382,36 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
               gap: '6px'
             }}
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>Savol Qo'shish</span>
           </button>
         </div>
 
         {/* Center Panel: Active Question Editor */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Question Text Box */}
-          <div className="glass-panel" style={{ padding: '24px', borderRadius: '24px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '800', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '10px' }}>
+          <div style={{
+            background: '#121826',
+            border: '1px solid #1e283d',
+            padding: '20px',
+            borderRadius: '16px'
+          }}>
+            <label style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
               {activeQuestionIndex + 1}-Savol Matni
             </label>
             <textarea
               rows={3}
               value={currentQ.question}
               onChange={(e) => updateCurrentQuestion('question', e.target.value)}
-              placeholder="Savolingizni bu yerga kiriting (masalan: O'zbekiston poytaxti qaysi shahar?)"
+              placeholder="Savolingizni bu yerga kiriting..."
               style={{
                 width: '100%',
-                background: '#090c15',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '16px',
-                padding: '16px',
-                color: '#fff',
-                fontSize: '18px',
+                background: '#0e1422',
+                border: '1px solid #222d42',
+                borderRadius: '12px',
+                padding: '14px',
+                color: '#ffffff',
+                fontSize: '16px',
                 fontWeight: '700',
                 resize: 'vertical',
                 lineHeight: 1.4
@@ -426,11 +419,11 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
             />
           </div>
 
-          {/* 4 Colored Kahoot Answers Grid */}
+          {/* 4 Colored Solid Kahoot Answers Grid */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '16px'
+            gap: '14px'
           }}>
             {currentQ.options.map((opt, optIdx) => {
               const colorInfo = ANSWER_COLORS[optIdx] || ANSWER_COLORS[0];
@@ -438,13 +431,11 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 <div
                   key={optIdx}
                   style={{
-                    background: '#111625',
-                    borderRadius: '18px',
-                    border: `2px solid ${opt.isCorrect ? colorInfo.bg : 'rgba(255, 255, 255, 0.08)'}`,
-                    padding: '16px',
-                    position: 'relative',
-                    boxShadow: opt.isCorrect ? `0 0 20px ${colorInfo.bg}40` : 'none',
-                    transition: 'all 0.2s ease'
+                    background: '#121826',
+                    borderRadius: '14px',
+                    border: `2px solid ${opt.isCorrect ? colorInfo.bg : '#1e283d'}`,
+                    padding: '14px',
+                    position: 'relative'
                   }}
                 >
                   <div style={{
@@ -453,22 +444,18 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                     justifyContent: 'space-between',
                     marginBottom: '10px'
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '8px',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '7px',
                         background: colorInfo.bg,
                         color: '#fff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: '900',
-                        fontSize: '14px'
+                        fontSize: '13px'
                       }}>
                         {colorInfo.shape}
                       </div>
@@ -487,18 +474,18 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 12px',
-                        borderRadius: '10px',
-                        background: opt.isCorrect ? '#10b981' : 'rgba(255, 255, 255, 0.06)',
+                        gap: '4px',
+                        padding: '5px 10px',
+                        borderRadius: '8px',
+                        background: opt.isCorrect ? '#059669' : '#1c273c',
                         color: opt.isCorrect ? '#fff' : '#94a3b8',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: '700'
                       }}
                     >
                       {opt.isCorrect ? (
                         <>
-                          <Check size={14} />
+                          <Check size={13} />
                           <span>To'g'ri Javob</span>
                         </>
                       ) : (
@@ -514,12 +501,12 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                     placeholder={`Javob variantini kiriting...`}
                     style={{
                       width: '100%',
-                      background: '#090c15',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '12px',
-                      padding: '12px 14px',
-                      color: '#fff',
-                      fontSize: '15px',
+                      background: '#0e1422',
+                      border: '1px solid #222d42',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                      color: '#ffffff',
+                      fontSize: '14px',
                       fontWeight: '600'
                     }}
                   />
@@ -529,10 +516,15 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
           </div>
 
           {/* Explanation / Notes */}
-          <div className="glass-panel" style={{ padding: '20px', borderRadius: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '800', color: '#cbd5e1', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <HelpCircle size={15} color="#8b5cf6" />
-              <span>Savol Izohi / Yechim (Ixtiyoriy)</span>
+          <div style={{
+            background: '#121826',
+            border: '1px solid #1e283d',
+            padding: '16px',
+            borderRadius: '14px'
+          }}>
+            <label style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+              <HelpCircle size={14} color="#818cf8" />
+              <span>Savol Izohi / Tushuntirish (Ixtiyoriy)</span>
             </label>
             <input
               type="text"
@@ -541,29 +533,34 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
               placeholder="O'yinchilarga javob ko'rsatilganda tushuntirish beriladi..."
               style={{
                 width: '100%',
-                background: '#090c15',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                padding: '10px 14px',
-                color: '#fff',
-                fontSize: '14px'
+                background: '#0e1422',
+                border: '1px solid #222d42',
+                borderRadius: '10px',
+                padding: '9px 12px',
+                color: '#ffffff',
+                fontSize: '13px'
               }}
             />
           </div>
         </div>
 
-        {/* Right Panel: Quiz & Question Configuration */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Right Panel: Quiz Configuration */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Question specific settings */}
-          <div className="glass-panel" style={{ padding: '20px', borderRadius: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={16} color="#06b6d4" />
+          <div style={{
+            background: '#121826',
+            border: '1px solid #1e283d',
+            padding: '16px',
+            borderRadius: '16px'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={15} color="#0284c7" />
               <span>Savol Sozlamalari</span>
             </h3>
 
             {/* Time Limit */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                 Vaqt chegarasi (sekund)
               </label>
               <select
@@ -571,15 +568,15 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 onChange={(e) => updateCurrentQuestion('timeLimit', parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  background: '#090c15',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#fff',
-                  fontSize: '14px'
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  color: '#ffffff',
+                  fontSize: '13px'
                 }}
               >
-                <option value={5}>5 sekund (Ekstremal)</option>
+                <option value={5}>5 sekund</option>
                 <option value={10}>10 sekund</option>
                 <option value={15}>15 sekund</option>
                 <option value={20}>20 sekund (Standart)</option>
@@ -589,8 +586,8 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
             </div>
 
             {/* Points */}
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+            <div>
+              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                 Ball miqdori
               </label>
               <select
@@ -598,30 +595,35 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 onChange={(e) => updateCurrentQuestion('points', parseInt(e.target.value))}
                 style={{
                   width: '100%',
-                  background: '#090c15',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#fff',
-                  fontSize: '14px'
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  color: '#ffffff',
+                  fontSize: '13px'
                 }}
               >
                 <option value={1000}>Standart (1,000 ball)</option>
-                <option value={2000}>2x Dubl Ball (2,000 ball)</option>
-                <option value={0}>Ballsiz (Mashq)</option>
+                <option value={2000}>2x Ball (2,000 ball)</option>
+                <option value={0}>Ballsiz</option>
               </select>
             </div>
           </div>
 
           {/* Overall Quiz Details */}
-          <div className="glass-panel" style={{ padding: '20px', borderRadius: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '14px' }}>
+          <div style={{
+            background: '#121826',
+            border: '1px solid #1e283d',
+            padding: '16px',
+            borderRadius: '16px'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', marginBottom: '12px' }}>
               Quiz Ma'lumotlari
             </h3>
 
             {/* Title */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                 Quiz Nomi
               </label>
               <input
@@ -631,19 +633,19 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 placeholder="Masalan: Web Dasturlash 2026"
                 style={{
                   width: '100%',
-                  background: '#090c15',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#fff',
-                  fontSize: '14px'
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  color: '#ffffff',
+                  fontSize: '13px'
                 }}
               />
             </div>
 
             {/* Category */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                 Kategoriya
               </label>
               <select
@@ -651,12 +653,12 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 onChange={(e) => setCategory(e.target.value)}
                 style={{
                   width: '100%',
-                  background: '#090c15',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#fff',
-                  fontSize: '14px'
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  color: '#ffffff',
+                  fontSize: '13px'
                 }}
               >
                 {CATEGORIES.filter(c => c !== 'Barchasi').map(cat => (
@@ -666,8 +668,8 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
             </div>
 
             {/* Difficulty */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                 Qiyinlik darajasi
               </label>
               <select
@@ -675,12 +677,12 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                 onChange={(e) => setDifficulty(e.target.value)}
                 style={{
                   width: '100%',
-                  background: '#090c15',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  color: '#fff',
-                  fontSize: '14px'
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '8px',
+                  padding: '8px',
+                  color: '#ffffff',
+                  fontSize: '13px'
                 }}
               >
                 <option value="Oson">Oson</option>
@@ -705,12 +707,12 @@ export default function CreateQuizView({ onSaveQuiz, onSaveAndPlay, initialQuiz 
                       setIcon(ic);
                     }}
                     style={{
-                      width: '36px',
-                      height: '36px',
+                      width: '34px',
+                      height: '34px',
                       borderRadius: '8px',
-                      fontSize: '18px',
-                      background: icon === ic ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.05)',
-                      border: icon === ic ? '2px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)'
+                      fontSize: '16px',
+                      background: icon === ic ? '#1e2842' : '#0e1422',
+                      border: icon === ic ? '2px solid #4f46e5' : '1px solid #222d42'
                     }}
                   >
                     {ic}

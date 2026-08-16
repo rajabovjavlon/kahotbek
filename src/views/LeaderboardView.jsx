@@ -6,25 +6,22 @@ import {
   Medal, 
   ShieldCheck, 
   Zap, 
-  Search,
   Award,
   Users
 } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 
 export default function LeaderboardView({ user }) {
-  const [filter, setFilter] = useState('all'); // 'all', 'weekly', 'monthly'
+  const [filter, setFilter] = useState('all');
   const [realRankings, setRealRankings] = useState([]);
 
   useEffect(() => {
-    // Load real players history from localStorage
     const savedPlayers = localStorage.getItem('kahotbek_real_players');
     let playersList = [];
     if (savedPlayers) {
       try { playersList = JSON.parse(savedPlayers); } catch (e) {}
     }
 
-    // Ensure current user is in the list
     const existingIndex = playersList.findIndex(p => p.name === user.name);
     const currentUserEntry = {
       name: user.name,
@@ -41,7 +38,6 @@ export default function LeaderboardView({ user }) {
       playersList.push(currentUserEntry);
     }
 
-    // Sort by XP descending
     playersList.sort((a, b) => (b.xp || 0) - (a.xp || 0));
 
     setRealRankings(playersList);
@@ -63,29 +59,29 @@ export default function LeaderboardView({ user }) {
   };
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px 20px 60px' }}>
+    <div style={{ maxWidth: '950px', margin: '0 auto', padding: '24px 20px 60px' }}>
       {/* Title */}
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          padding: '6px 16px',
-          background: 'rgba(245, 158, 11, 0.15)',
+          padding: '5px 14px',
+          background: 'rgba(245, 158, 11, 0.12)',
           border: '1px solid rgba(245, 158, 11, 0.3)',
           borderRadius: '9999px',
           color: '#fbbf24',
-          fontSize: '13px',
+          fontSize: '12px',
           fontWeight: '800',
-          marginBottom: '10px'
+          marginBottom: '8px'
         }}>
-          <Trophy size={16} />
+          <Trophy size={15} />
           <span>Haqiqiy O'yinchilar Reytingi</span>
         </div>
-        <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#ffffff' }}>
           Peshqadamlar Jadvali
         </h1>
-        <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '4px' }}>
+        <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>
           O'yinlarda to'plangan real ballar va g'alabalar bo'yicha jonli peshqadamlar
         </p>
       </div>
@@ -94,8 +90,8 @@ export default function LeaderboardView({ user }) {
       <div style={{
         display: 'flex',
         justifyContent: 'center',
-        gap: '8px',
-        marginBottom: '28px'
+        gap: '6px',
+        marginBottom: '24px'
       }}>
         {[
           { id: 'all', label: 'Barcha Vaqtlar' },
@@ -109,13 +105,13 @@ export default function LeaderboardView({ user }) {
               setFilter(tab.id);
             }}
             style={{
-              padding: '8px 20px',
-              borderRadius: '12px',
+              padding: '7px 16px',
+              borderRadius: '10px',
               fontSize: '13px',
               fontWeight: '700',
-              background: filter === tab.id ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255, 255, 255, 0.05)',
-              border: filter === tab.id ? '1px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)',
-              color: filter === tab.id ? '#fff' : '#94a3b8'
+              background: filter === tab.id ? '#4f46e5' : '#121826',
+              border: filter === tab.id ? '1px solid #4f46e5' : '1px solid #1e283d',
+              color: filter === tab.id ? '#ffffff' : '#94a3b8'
             }}
           >
             {tab.label}
@@ -128,49 +124,46 @@ export default function LeaderboardView({ user }) {
         <div style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.min(realRankings.length, 3)}, 1fr)`,
-          gap: '16px',
-          marginBottom: '30px'
+          gap: '14px',
+          marginBottom: '26px'
         }}>
           {realRankings.slice(0, 3).map((player, i) => (
             <div
               key={i}
-              className="glass-panel anim-pop"
+              className="anim-pop"
               style={{
-                padding: '24px 16px',
-                borderRadius: '22px',
+                padding: '20px 14px',
+                borderRadius: '16px',
                 textAlign: 'center',
-                background: i === 0 
-                  ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(17, 22, 37, 0.9))' 
-                  : 'rgba(17, 22, 37, 0.9)',
-                border: i === 0 ? '2px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255,255,255,0.08)',
-                boxShadow: i === 0 ? '0 10px 30px rgba(245, 158, 11, 0.2)' : 'none'
+                background: '#121826',
+                border: i === 0 ? '2px solid #f59e0b' : '1px solid #1e283d'
               }}
             >
-              <div style={{ fontSize: '24px', marginBottom: '4px' }}>{getBadge(i + 1)}</div>
+              <div style={{ fontSize: '22px', marginBottom: '4px' }}>{getBadge(i + 1)}</div>
               <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '18px',
-                background: 'linear-gradient(135deg, #0ea5e9, #3b82f6)',
+                width: '48px',
+                height: '48px',
+                borderRadius: '14px',
+                background: '#0284c7',
+                color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '28px',
-                margin: '0 auto 12px',
-                boxShadow: '0 0 20px rgba(14, 165, 233, 0.3)'
+                fontSize: '24px',
+                margin: '0 auto 10px'
               }}>
                 {player.avatar || '🦁'}
               </div>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '2px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', marginBottom: '2px' }}>
                 {player.name}
               </h3>
-              <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
                 {player.username}
               </div>
-              <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: '700', marginBottom: '8px' }}>
+              <div style={{ fontSize: '11px', color: '#818cf8', fontWeight: '700', marginBottom: '6px' }}>
                 {getLeague(player.xp || 0)}
               </div>
-              <div style={{ fontSize: '16px', fontWeight: '900', color: '#fbbf24' }}>
+              <div style={{ fontSize: '15px', fontWeight: '900', color: '#fbbf24' }}>
                 ⚡ {(player.xp || 0).toLocaleString()} XP
               </div>
             </div>
@@ -179,12 +172,14 @@ export default function LeaderboardView({ user }) {
       )}
 
       {/* Full Leaderboard Table */}
-      <div className="glass-panel" style={{
-        padding: '16px',
-        borderRadius: '24px',
+      <div style={{
+        background: '#121826',
+        border: '1px solid #1e283d',
+        padding: '12px',
+        borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px'
+        gap: '6px'
       }}>
         {realRankings.map((p, idx) => {
           const isMe = p.name === user.name;
@@ -195,46 +190,44 @@ export default function LeaderboardView({ user }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '14px 20px',
-                borderRadius: '16px',
-                background: isMe 
-                  ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.2))' 
-                  : 'rgba(255, 255, 255, 0.03)',
-                border: isMe ? '2px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.06)'
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: isMe ? '#1a2336' : '#0e1422',
+                border: isMe ? '1px solid #4f46e5' : '1px solid #1e283d'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{
-                  width: '28px',
-                  fontSize: '15px',
+                  width: '24px',
+                  fontSize: '14px',
                   fontWeight: '900',
                   color: idx < 3 ? '#fbbf24' : '#94a3b8'
                 }}>
                   #{idx + 1}
                 </div>
 
-                <div style={{ fontSize: '24px' }}>{p.avatar || '🦁'}</div>
+                <div style={{ fontSize: '22px' }}>{p.avatar || '🦁'}</div>
 
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>{p.name}</span>
                     {isMe && (
-                      <span style={{ fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '6px', fontWeight: '800' }}>
+                      <span style={{ fontSize: '10px', background: '#4f46e5', color: '#fff', padding: '1px 5px', borderRadius: '5px', fontWeight: '800' }}>
                         SIZ
                       </span>
                     )}
                     {p.isVerified && (
-                      <span style={{ fontSize: '11px', color: '#0ea5e9' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#0284c7' }}>✓</span>
                     )}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                     🏆 {p.wins || 0} ta g'alaba • {getLeague(p.xp || 0)}
                   </div>
                 </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '16px', fontWeight: '900', color: '#38bdf8' }}>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#38bdf8' }}>
                   ⚡ {(p.xp || 0).toLocaleString()} XP
                 </div>
               </div>

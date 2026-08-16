@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
-  Crown, 
-  Sparkles, 
   RotateCcw, 
   Home, 
   Gamepad2, 
   Award, 
-  Zap, 
-  CheckCircle2, 
-  Flame,
-  UserCheck
+  Sparkles
 } from 'lucide-react';
 import { fireVictoryConfetti } from '../utils/confetti';
 import { soundManager } from '../utils/sounds';
@@ -87,16 +82,13 @@ export default function PodiumView({
       }
     });
 
-    // Sort strictly by score / xp descending
     realPlayers.sort((a, b) => (b.currentScore || b.xp || 0) - (a.currentScore || a.xp || 0));
 
-    // Calculate actual rank of current user
     const rank = realPlayers.findIndex(p => p.name === user.name) + 1;
     setMyRank(rank > 0 ? rank : 1);
     setStandings(realPlayers);
     localStorage.setItem('kahotbek_real_players', JSON.stringify(realPlayers));
 
-    // Celebrations based on rank
     if (rank === 1) {
       fireVictoryConfetti();
       soundManager.playFanfare();
@@ -114,7 +106,6 @@ export default function PodiumView({
   const totalQuestions = quiz?.questions?.length || 5;
   const accuracy = Math.round(((userResult?.correctCount || 0) / totalQuestions) * 100);
 
-  // Dynamic header text based on actual rank
   const getHeaderText = () => {
     if (myRank === 1) return "Tabriklaymiz! Siz 1-o'rinni egalladingiz! 👑🏆";
     if (myRank === 2) return "Ajoyib natija! Siz 2-o'rinni egalladingiz! 🥈";
@@ -124,53 +115,53 @@ export default function PodiumView({
 
   return (
     <div style={{
-      maxWidth: '1050px',
+      maxWidth: '1000px',
       margin: '0 auto',
       padding: '24px 20px 80px',
       textAlign: 'center'
     }}>
       {/* Title */}
-      <div className="anim-fade" style={{ marginBottom: '28px' }}>
+      <div className="anim-fade" style={{ marginBottom: '26px' }}>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          padding: '6px 16px',
-          background: myRank === 1 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(14, 165, 233, 0.15)',
-          border: `1px solid ${myRank === 1 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(14, 165, 233, 0.3)'}`,
+          padding: '5px 14px',
+          background: myRank === 1 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(2, 132, 199, 0.12)',
+          border: `1px solid ${myRank === 1 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(2, 132, 199, 0.3)'}`,
           borderRadius: '9999px',
           color: myRank === 1 ? '#fbbf24' : '#38bdf8',
-          fontSize: '13px',
+          fontSize: '12px',
           fontWeight: '800',
           textTransform: 'uppercase',
-          marginBottom: '10px'
+          marginBottom: '8px'
         }}>
-          <Sparkles size={16} />
-          <span>O'yin Yakunlandi • Reyting Bo'yicha O'rin: #{myRank}</span>
+          <Sparkles size={14} />
+          <span>O'yin Yakunlandi • O'rin: #{myRank}</span>
         </div>
 
         <h1 style={{
-          fontSize: 'clamp(28px, 6vw, 44px)',
+          fontSize: 'clamp(24px, 5vw, 36px)',
           fontWeight: '900',
-          color: '#fff',
+          color: '#ffffff',
           letterSpacing: '-0.02em'
         }}>
           {getHeaderText()}
         </h1>
-        <p style={{ fontSize: '15px', color: '#94a3b8', marginTop: '4px' }}>
+        <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '2px' }}>
           {quiz.title}
         </p>
       </div>
 
-      {/* 3D RISING BLOCKS PODIUM WITH REAL ANIMAL AVATARS & ACTUAL RANKS */}
+      {/* Solid Clean Podium */}
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
-        gap: '20px',
-        maxWidth: '750px',
-        margin: '0 auto 36px',
-        paddingBottom: '20px'
+        gap: '16px',
+        maxWidth: '700px',
+        margin: '0 auto 32px',
+        paddingBottom: '10px'
       }}>
         {/* 2nd Place Silver Column */}
         {secondPlace ? (
@@ -178,84 +169,70 @@ export default function PodiumView({
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            animationDelay: '0.2s'
+            alignItems: 'center'
           }}>
-            <div style={{ fontSize: '42px', marginBottom: '6px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '4px' }}>
               {secondPlace.avatar || '🥈'}
             </div>
             <div style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: '800',
               color: '#cbd5e1',
               marginBottom: '2px',
-              maxWidth: '120px',
+              maxWidth: '110px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}>
               {secondPlace.name} {secondPlace.name === user.name && '(SIZ)'}
             </div>
-            <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '800', marginBottom: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '800', marginBottom: '6px' }}>
               {(secondPlace.currentScore || secondPlace.xp || 0).toLocaleString()} ball
             </div>
 
             {/* Silver Block */}
             <div style={{
               width: '100%',
-              height: '140px',
-              background: 'linear-gradient(180deg, rgba(148, 163, 184, 0.4) 0%, rgba(51, 65, 85, 0.85) 100%)',
-              border: '2px solid rgba(148, 163, 184, 0.6)',
-              borderRadius: '20px 20px 0 0',
+              height: '130px',
+              background: '#1c273c',
+              border: '1px solid #334155',
+              borderRadius: '16px 16px 0 0',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 12px 35px rgba(0,0,0,0.5)'
+              justifyContent: 'center'
             }}>
-              <div style={{ fontSize: '38px', fontWeight: '900', color: '#cbd5e1' }}>2</div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>KUMUSH</div>
+              <div style={{ fontSize: '32px', fontWeight: '900', color: '#cbd5e1' }}>2</div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8' }}>KUMUSH</div>
             </div>
           </div>
         ) : (
           <div style={{ flex: 1 }} />
         )}
 
-        {/* 1st Place Gold Champion (TALLEST WITH #1 SCORER) */}
+        {/* 1st Place Champion */}
         {firstPlace && (
           <div className="anim-pop" style={{
-            flex: 1.3,
+            flex: 1.2,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 2
           }}>
-            {/* Animated Crown */}
-            <div style={{
-              fontSize: '32px',
-              color: '#fbbf24',
-              marginBottom: '-6px',
-              animation: 'floatAnim 2.5s ease-in-out infinite'
-            }}>
+            <div style={{ fontSize: '28px', color: '#fbbf24', marginBottom: '-4px' }}>
               👑
             </div>
 
-            {/* Champion Animal Avatar */}
-            <div style={{
-              fontSize: '56px',
-              marginBottom: '4px',
-              filter: 'drop-shadow(0 0 25px rgba(245, 158, 11, 0.7))',
-              animation: 'floatAnim 3s ease-in-out infinite'
-            }}>
+            <div style={{ fontSize: '48px', marginBottom: '2px' }}>
               {firstPlace.avatar || '🦁'}
             </div>
 
             <div style={{
-              fontSize: '18px',
+              fontSize: '16px',
               fontWeight: '900',
               color: '#fbbf24',
               marginBottom: '2px',
-              maxWidth: '150px',
+              maxWidth: '140px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
@@ -264,10 +241,10 @@ export default function PodiumView({
             </div>
 
             <div style={{
-              fontSize: '16px',
+              fontSize: '14px',
               color: '#38bdf8',
               fontWeight: '900',
-              marginBottom: '10px'
+              marginBottom: '8px'
             }}>
               {(firstPlace.currentScore || firstPlace.xp || 0).toLocaleString()} BALL
             </div>
@@ -275,19 +252,18 @@ export default function PodiumView({
             {/* 1st Place Gold Pillar */}
             <div style={{
               width: '100%',
-              height: '210px',
-              background: 'linear-gradient(180deg, rgba(245, 158, 11, 0.45) 0%, rgba(180, 83, 9, 0.9) 100%)',
-              border: '2px solid rgba(245, 158, 11, 0.8)',
-              borderRadius: '24px 24px 0 0',
+              height: '180px',
+              background: '#252014',
+              border: '2px solid #f59e0b',
+              borderRadius: '18px 18px 0 0',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 15px 45px rgba(245, 158, 11, 0.35)'
+              justifyContent: 'center'
             }}>
-              <Trophy size={46} color="#fbbf24" style={{ marginBottom: '4px', filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.8))' }} />
-              <div style={{ fontSize: '44px', fontWeight: '900', color: '#fbbf24' }}>1</div>
-              <div style={{ fontSize: '13px', fontWeight: '900', color: '#fef08a' }}>G'OLIB / CHEMPION</div>
+              <Trophy size={38} color="#fbbf24" style={{ marginBottom: '4px' }} />
+              <div style={{ fontSize: '38px', fontWeight: '900', color: '#fbbf24' }}>1</div>
+              <div style={{ fontSize: '11px', fontWeight: '900', color: '#fef08a' }}>G'OLIB</div>
             </div>
           </div>
         )}
@@ -298,43 +274,41 @@ export default function PodiumView({
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            animationDelay: '0.4s'
+            alignItems: 'center'
           }}>
-            <div style={{ fontSize: '42px', marginBottom: '6px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '4px' }}>
               {thirdPlace.avatar || '🥉'}
             </div>
             <div style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: '800',
               color: '#d97706',
               marginBottom: '2px',
-              maxWidth: '120px',
+              maxWidth: '110px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}>
               {thirdPlace.name} {thirdPlace.name === user.name && '(SIZ)'}
             </div>
-            <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '800', marginBottom: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '800', marginBottom: '6px' }}>
               {(thirdPlace.currentScore || thirdPlace.xp || 0).toLocaleString()} ball
             </div>
 
             {/* Bronze Block */}
             <div style={{
               width: '100%',
-              height: '110px',
-              background: 'linear-gradient(180deg, rgba(180, 83, 9, 0.3) 0%, rgba(120, 53, 15, 0.8) 100%)',
-              border: '2px solid rgba(180, 83, 9, 0.5)',
-              borderRadius: '20px 20px 0 0',
+              height: '100px',
+              background: '#1a1917',
+              border: '1px solid #78350f',
+              borderRadius: '16px 16px 0 0',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              justifyContent: 'center'
             }}>
-              <div style={{ fontSize: '36px', fontWeight: '900', color: '#f59e0b' }}>3</div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: '#d97706' }}>BRONZA</div>
+              <div style={{ fontSize: '30px', fontWeight: '900', color: '#f59e0b' }}>3</div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: '#d97706' }}>BRONZA</div>
             </div>
           </div>
         ) : (
@@ -342,74 +316,69 @@ export default function PodiumView({
         )}
       </div>
 
-      {/* DETAILED FINAL SCORE SUMMARY CARD */}
-      <div className="glass-panel anim-fade" style={{
-        maxWidth: '750px',
-        margin: '0 auto 36px',
-        padding: '24px',
-        borderRadius: '24px',
-        background: 'linear-gradient(135deg, rgba(17, 22, 37, 0.95), rgba(30, 27, 75, 0.85))',
-        border: '1px solid rgba(139, 92, 246, 0.3)',
-        boxShadow: '0 15px 40px rgba(0,0,0,0.6)'
+      {/* FINAL SCORE SUMMARY CARD */}
+      <div style={{
+        maxWidth: '700px',
+        margin: '0 auto 32px',
+        padding: '20px',
+        borderRadius: '16px',
+        background: '#121826',
+        border: '1px solid #1e283d'
       }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <Award size={18} color="#8b5cf6" />
-          <span>Sizning Yakuniy Natijalaringiz</span>
+        <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#cbd5e1', textTransform: 'uppercase', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <Award size={16} color="#818cf8" />
+          <span>Sizning Natijalaringiz</span>
         </h3>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+          gap: '10px'
         }}>
-          {/* Your Exact Rank */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            padding: '14px',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            background: '#0e1422',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid #1e283d'
           }}>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Reytingdagi O'rningiz</div>
-            <div style={{ fontSize: '22px', fontWeight: '900', color: myRank === 1 ? '#fbbf24' : (myRank === 2 ? '#cbd5e1' : '#38bdf8'), marginTop: '2px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Reytingdagi O'rningiz</div>
+            <div style={{ fontSize: '18px', fontWeight: '900', color: myRank === 1 ? '#fbbf24' : '#38bdf8', marginTop: '2px' }}>
               #{myRank}-o'rin
             </div>
           </div>
 
-          {/* Total Points */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            padding: '14px',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            background: '#0e1422',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid #1e283d'
           }}>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>To'plangan Ball</div>
-            <div style={{ fontSize: '22px', fontWeight: '900', color: '#38bdf8', marginTop: '2px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>To'plangan Ball</div>
+            <div style={{ fontSize: '18px', fontWeight: '900', color: '#38bdf8', marginTop: '2px' }}>
               {(userResult?.currentScore || 0).toLocaleString()}
             </div>
           </div>
 
-          {/* Correct Answers */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            padding: '14px',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            background: '#0e1422',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid #1e283d'
           }}>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>To'g'ri Javoblar</div>
-            <div style={{ fontSize: '22px', fontWeight: '900', color: '#10b981', marginTop: '2px' }}>
-              {userResult?.correctCount || 0} / {totalQuestions} <span style={{ fontSize: '13px', color: '#86efac' }}>({accuracy}%)</span>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>To'g'ri Javoblar</div>
+            <div style={{ fontSize: '18px', fontWeight: '900', color: '#10b981', marginTop: '2px' }}>
+              {userResult?.correctCount || 0} / {totalQuestions} <span style={{ fontSize: '12px', color: '#86efac' }}>({accuracy}%)</span>
             </div>
           </div>
 
-          {/* Reward XP & Coins */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            padding: '14px',
-            borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
+            background: '#0e1422',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '1px solid #1e283d'
           }}>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Mukofot</div>
-            <div style={{ fontSize: '18px', fontWeight: '900', color: '#fbbf24', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Mukofot</div>
+            <div style={{ fontSize: '15px', fontWeight: '900', color: '#fbbf24', marginTop: '2px' }}>
               ⚡ +{userResult?.currentScore || 0} XP • 🪙 +{myRank === 1 ? 50 : 20}
             </div>
           </div>
@@ -419,7 +388,7 @@ export default function PodiumView({
       {/* Action Buttons */}
       <div style={{
         display: 'flex',
-        gap: '14px',
+        gap: '12px',
         justifyContent: 'center',
         flexWrap: 'wrap'
       }}>
@@ -428,10 +397,10 @@ export default function PodiumView({
             soundManager.playClick();
             onPlayAgain();
           }}
-          className="btn-neon-primary"
-          style={{ padding: '14px 28px', fontSize: '15px', borderRadius: '16px' }}
+          className="btn-solid-primary"
+          style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px' }}
         >
-          <RotateCcw size={18} />
+          <RotateCcw size={16} />
           <span>Qayta O'ynash</span>
         </button>
 
@@ -440,10 +409,10 @@ export default function PodiumView({
             soundManager.playClick();
             onGoExplore();
           }}
-          className="btn-neon-cyan"
-          style={{ padding: '14px 28px', fontSize: '15px', borderRadius: '16px' }}
+          className="btn-solid-blue"
+          style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px' }}
         >
-          <Gamepad2 size={18} />
+          <Gamepad2 size={16} />
           <span>Boshqa O'yin Tanlash</span>
         </button>
 
@@ -452,10 +421,10 @@ export default function PodiumView({
             soundManager.playClick();
             onGoHome();
           }}
-          className="btn-glass"
-          style={{ padding: '14px 24px', fontSize: '15px', borderRadius: '16px' }}
+          className="btn-solid-secondary"
+          style={{ padding: '12px 20px', fontSize: '14px', borderRadius: '12px' }}
         >
-          <Home size={18} />
+          <Home size={16} />
           <span>Bosh Sahifa</span>
         </button>
       </div>

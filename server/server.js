@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 3001;
 // 1. SECURITY MIDDLEWARE (HELMET)
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Allows flexible assets for dev & render
+    contentSecurityPolicy: false, // Allows flexible assets for dev & web sockets
     crossOriginEmbedderPolicy: false
   })
 );
@@ -38,15 +38,15 @@ app.use(
   })
 );
 
-// 3. BODY PARSERS & LIMITS (ANTI-DDOS PAYLOAD)
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+// 3. BODY PARSERS & LIMITS (ANTI-DDOS PAYLOAD PROTECTION)
+app.use(express.json({ limit: '500kb' }));
+app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 
-// 4. RATE LIMITING (ANTI-BRUTE FORCE / DDOS DEFENSE)
+// 4. RATE LIMITING (ANTI-BRUTE FORCE & DDOS DEFENSE)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 auth requests per windowMs
-  message: { success: false, message: "Juda ko'p so'rov yuborildi. Iltimos, bir ozdan so'ng qayta urining." },
+  max: 30, // Limit each IP to 30 auth requests per windowMs
+  message: { success: false, message: "Juda ko'p so'rov yuborildi. Xavfsizlik yuzasidan birozdan so'ng qayta urining." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -58,20 +58,20 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(generalLimiter);
+app.use('/api/', generalLimiter);
 
-// 5. SOCKET.IO SETUP WITH ORIGIN PROTECTION
+// 5. SOCKET.IO SETUP WITH ORIGIN & BUFFER PROTECTION
 const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
   },
-  maxHttpBufferSize: 1e5 // 100kb limit to prevent memory attack
+  maxHttpBufferSize: 1e5 // 100kb limit to prevent memory exhaustion attacks
 });
 
 setupSocketHandlers(io);
 
-// 6. HEALTH CHECK (FOR RENDER / RAILWAY MONITORING)
+// 6. HEALTH CHECK (FOR PRODUCTION MONITORING)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', uptime: process.uptime(), timestamp: new Date() });
 });
@@ -80,8 +80,11 @@ app.get('/health', (req, res) => {
 app.post('/api/auth/telegram-verify', authLimiter, (req, res) => {
   try {
     const { code } = req.body;
-    if (!code || String(code).length < 4) {
-      return res.status(400).json({ success: false, message: "5 xonali tasdiqlash kodini kiriting!" });
+    if (!code || String(code).trim().length !== 5) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Iltimos, aynan 5 xonali tasdiqlash parolini kiriting!" 
+      });
     }
 
     const verification = verifyTelegramCode(code);
@@ -98,7 +101,7 @@ app.post('/api/auth/telegram-verify', authLimiter, (req, res) => {
       });
     }
   } catch (err) {
-    console.error("Auth error:", err);
+    console.error("Auth verification error:", err);
     res.status(500).json({ success: false, message: "Serverda xatolik yuz berdi" });
   }
 });
@@ -117,6 +120,6 @@ server.listen(PORT, () => {
   console.log(`🚀 KAHOTBEK SERVER IS READY!`);
   console.log(`🌐 Listening on port: ${PORT}`);
   console.log(`🛡️  Security Layers (Helmet & Rate Limiter) ACTIVE`);
-  console.log(`🤖 Telegram Bot: @${process.env.TELEGRAM_BOT_USERNAME || 'kahoooooooot_bot'}`);
+  console.log(`🤖 Telegram Bot: @${process.env.TELEGRAM_BOT_USERNAME || 'kahotbekbot'}`);
   console.log(`=========================================`);
 });

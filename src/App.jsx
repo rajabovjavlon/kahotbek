@@ -4,6 +4,7 @@ import JoinModal from './components/JoinModal';
 import AuthModal from './components/AuthModal';
 import HomeView from './views/HomeView';
 import ExploreView from './views/ExploreView';
+import ShopView from './views/ShopView';
 import CreateQuizView from './views/CreateQuizView';
 import LobbyView from './views/LobbyView';
 import GamePlayView from './views/GamePlayView';
@@ -16,11 +17,19 @@ import { soundManager } from './utils/sounds';
 import { socket } from './utils/socket';
 
 export default function App() {
-  // 1. User state
+  // 1. User state with inventory & equipped effects
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('kahotbek_user');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          inventory: parsed.inventory || ['trail_fire'],
+          equippedTrail: parsed.equippedTrail || 'trail_fire',
+          coins: parsed.coins ?? 450
+        };
+      } catch {}
     }
     return {
       id: 'usr-default',
@@ -31,7 +40,9 @@ export default function App() {
       xp: 2850,
       level: 5,
       wins: 14,
-      isVerified: false
+      isVerified: false,
+      inventory: ['trail_fire'],
+      equippedTrail: 'trail_fire'
     };
   });
 
@@ -39,7 +50,7 @@ export default function App() {
   const [customQuizzes, setCustomQuizzes] = useState(() => {
     const saved = localStorage.getItem('kahotbek_custom_quizzes');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { return JSON.parse(saved); } catch {}
     }
     return [];
   });
@@ -65,6 +76,7 @@ export default function App() {
   const [roomPin, setRoomPin] = useState('');
   const [hostSecret, setHostSecret] = useState(null);
   const [isHost, setIsHost] = useState(true);
+  const [isSpectator, setIsSpectator] = useState(false);
   const [lobbyPlayers, setLobbyPlayers] = useState([]);
   const [finalScores, setFinalScores] = useState([]);
   const [editingQuiz, setEditingQuiz] = useState(null);
@@ -102,15 +114,16 @@ export default function App() {
   const handleHostLobby = (quiz) => {
     setActiveQuiz(quiz);
     setIsHost(true);
+    setIsSpectator(false);
     const newPin = Math.floor(100000 + Math.random() * 900000).toString();
     setRoomPin(newPin);
 
-    // Emit create_room to server
     socket.emit('create_room', {
       pin: newPin,
       quiz,
       hostName: user.name,
-      hostAvatar: user.avatar
+      hostAvatar: user.avatar,
+      mode: 'race'
     }, (res) => {
       if (res && res.success) {
         setHostSecret(res.hostSecret);
@@ -119,7 +132,7 @@ export default function App() {
     });
 
     setLobbyPlayers([
-      { id: socket.id || 'host', name: user.name, avatar: user.avatar, isHost: true, score: 0 }
+      { id: socket.id || 'host', name: user.name, avatar: user.avatar, isHost: true, score: 0, step: 0, trailEffect: user.equippedTrail }
     ]);
     setCurrentTab('lobby');
   };
@@ -129,26 +142,34 @@ export default function App() {
     socket.emit('join_room', {
       pin,
       name: nickname,
-      avatar
+      avatar,
+      trailEffect: user.equippedTrail || 'trail_fire'
     }, (res) => {
       if (res && res.success) {
         setRoomPin(pin);
         setIsHost(false);
-        setLobbyPlayers(res.players);
+        setIsSpectator(!!res.isSpectator);
+        setLobbyPlayers(res.players || []);
         setIsJoinModalOpen(false);
-        setCurrentTab('lobby');
+        
+        if (res.isSpectator || res.phase === 'question' || res.phase === 'intro') {
+          setCurrentTab('gameplay');
+        } else {
+          setCurrentTab('lobby');
+        }
       } else {
         alert(res?.message || "Xonaga ulanib bo'lmadi!");
       }
     });
   };
 
-  // 3. Solo Practice (vs self)
+  // 3. Solo Practice
   const handlePlaySolo = (quiz) => {
     setActiveQuiz(quiz);
     setIsHost(true);
+    setIsSpectator(false);
     setLobbyPlayers([
-      { id: user.id, name: user.name, avatar: user.avatar, isHost: true, score: 0 }
+      { id: user.id, name: user.name, avatar: user.avatar, isHost: true, score: 0, step: 0, trailEffect: user.equippedTrail }
     ]);
     setCurrentTab('gameplay');
   };
@@ -166,7 +187,7 @@ export default function App() {
     setFinalScores(scores);
     const isWinner = scores[0]?.name === user.name;
     const gainedXp = isWinner ? 1000 : 400;
-    const gainedCoins = isWinner ? 50 : 15;
+    const gainedCoins = isWinner ? 60 : 25;
 
     setUser(prev => ({
       ...prev,
@@ -209,7 +230,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#090c15' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0b0f19' }}>
       {/* Top Navbar */}
       {currentTab !== 'gameplay' && (
         <Navbar
@@ -249,6 +270,13 @@ export default function App() {
           />
         )}
 
+        {currentTab === 'shop' && (
+          <ShopView
+            user={user}
+            onUpdateUser={setUser}
+          />
+        )}
+
         {currentTab === 'create' && (
           <CreateQuizView
             initialQuiz={editingQuiz}
@@ -263,6 +291,7 @@ export default function App() {
             roomPin={roomPin}
             players={lobbyPlayers}
             isHost={isHost}
+            user={user}
             onStartGame={handleStartGameFromLobby}
             onLeaveLobby={() => setCurrentTab('home')}
             onRemovePlayer={(id) => setLobbyPlayers(prev => prev.filter(p => p.id !== id))}
@@ -274,6 +303,8 @@ export default function App() {
             quiz={activeQuiz}
             players={lobbyPlayers}
             user={user}
+            roomPin={roomPin}
+            isSpectator={isSpectator}
             onFinishGame={handleFinishGame}
           />
         )}
@@ -313,9 +344,9 @@ export default function App() {
       {/* Footer */}
       {currentTab !== 'gameplay' && (
         <footer style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          background: 'rgba(9, 12, 21, 0.95)',
-          padding: '24px 20px',
+          borderTop: '1px solid #1e283d',
+          background: '#0e1422',
+          padding: '20px',
           textAlign: 'center',
           color: '#64748b',
           fontSize: '13px'
@@ -324,13 +355,13 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px' }}>⚡</span>
               <span style={{ fontWeight: '800', color: '#f8fafc' }}>KAHOTBEK</span>
-              <span>— O'zbekistondagi №1 Interaktiv Real-Time Quiz Platformasi</span>
+              <span>— O'zbekistondagi №1 Interaktiv Real-Time Viktorina & Poyga Platformasi</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ color: '#10b981', fontWeight: '700' }}>🛡️ 100% Xavfsiz Server</span>
+              <span style={{ color: '#10b981', fontWeight: '700' }}>🛡️ 100% Himoyalangan</span>
               <span>•</span>
-              <a href="https://t.me/kahoooooooot_bot" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '700' }}>
-                @kahoooooooot_bot
+              <a href="https://t.me/kahotbekbot" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '700' }}>
+                @kahotbekbot
               </a>
             </div>
           </div>

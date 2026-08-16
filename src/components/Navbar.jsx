@@ -1,16 +1,14 @@
 import React from 'react';
 import { 
-  Zap, 
   Gamepad2, 
   PlusCircle, 
-  LogIn, 
   Trophy, 
   User, 
   Volume2, 
   VolumeX, 
   Sparkles, 
-  KeyRound, 
-  Layers 
+  KeyRound,
+  ShoppingBag
 } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 
@@ -34,6 +32,7 @@ export default function Navbar({
   const navItems = [
     { id: 'home', label: 'Bosh sahifa', icon: Sparkles },
     { id: 'explore', label: "O'yinlar", icon: Gamepad2 },
+    { id: 'shop', label: "Do'kon", icon: ShoppingBag, badge: 'Yangi' },
     { id: 'create', label: 'Quiz Yaratish', icon: PlusCircle, highlight: true },
     { id: 'leaderboard', label: 'Reyting', icon: Trophy },
     { id: 'profile', label: 'Mening Profilim', icon: User },
@@ -46,10 +45,8 @@ export default function Navbar({
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      background: 'rgba(9, 12, 21, 0.92)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      background: '#0e1422',
+      borderBottom: '1px solid #1f2a3e',
       padding: '12px 24px'
     }}>
       <div style={{
@@ -76,27 +73,25 @@ export default function Navbar({
           }}
         >
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            background: '#4f46e5',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(139, 92, 246, 0.6)',
-            fontSize: '22px'
+            fontSize: '20px',
+            color: '#fff'
           }}>
             ⚡
           </div>
           <div>
             <div style={{
-              fontSize: '22px',
+              fontSize: '20px',
               fontWeight: '900',
               fontFamily: 'var(--font-heading)',
-              letterSpacing: '-0.03em',
-              background: 'linear-gradient(90deg, #ffffff, #a5b4fc, #38bdf8)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.02em',
+              color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               gap: '6px'
@@ -107,14 +102,13 @@ export default function Navbar({
                 fontWeight: '800',
                 padding: '2px 6px',
                 borderRadius: '6px',
-                background: 'rgba(139, 92, 246, 0.3)',
-                color: '#c084fc',
-                border: '1px solid rgba(168, 85, 247, 0.4)',
-                WebkitTextFillColor: 'initial'
+                background: '#1e293b',
+                color: '#818cf8',
+                border: '1px solid #334155'
               }}>PRO</span>
             </div>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '-2px' }}>
-              Interaktiv Quiz & Game Arena
+              Interaktiv Viktorinalar Maydoni
             </div>
           </div>
         </div>
@@ -123,11 +117,11 @@ export default function Navbar({
         <nav style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
-          background: 'rgba(17, 22, 37, 0.8)',
-          padding: '6px',
-          borderRadius: '14px',
-          border: '1px solid rgba(255, 255, 255, 0.06)'
+          gap: '4px',
+          background: '#0b0f19',
+          padding: '4px',
+          borderRadius: '12px',
+          border: '1px solid #1c2638'
         }}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -142,44 +136,51 @@ export default function Navbar({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontSize: '14px',
+                  gap: '7px',
+                  padding: '7px 13px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
                   fontWeight: isActive ? '700' : '600',
                   color: isActive ? '#ffffff' : '#94a3b8',
-                  background: isActive 
-                    ? (item.highlight 
-                        ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' 
-                        : 'rgba(255, 255, 255, 0.12)')
-                    : 'transparent',
-                  boxShadow: isActive ? '0 4px 15px rgba(0, 0, 0, 0.3)' : 'none',
-                  transition: 'all 0.2s ease'
+                  background: isActive ? '#4f46e5' : 'transparent',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Icon size={16} color={isActive ? '#ffffff' : (item.highlight ? '#a855f7' : '#94a3b8')} />
+                <Icon size={15} color={isActive ? '#ffffff' : (item.highlight ? '#818cf8' : '#94a3b8')} />
                 <span>{item.label}</span>
+                {item.badge && (
+                  <span style={{
+                    fontSize: '9px',
+                    fontWeight: '800',
+                    background: '#f59e0b',
+                    color: '#000',
+                    padding: '1px 5px',
+                    borderRadius: '4px'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
 
         {/* Right Actions: PIN Quick Join, Sound, User Profile */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Quick PIN Join Button */}
           <button
             onClick={() => {
               soundManager.playClick();
               onOpenJoinModal();
             }}
-            className="btn-neon-cyan"
+            className="btn-solid-blue"
             style={{
-              padding: '8px 16px',
+              padding: '7px 14px',
               fontSize: '13px',
-              borderRadius: '12px'
+              borderRadius: '10px'
             }}
           >
-            <KeyRound size={16} />
+            <KeyRound size={15} />
             <span>PIN bilan kirish</span>
           </button>
 
@@ -187,11 +188,11 @@ export default function Navbar({
           <button
             onClick={handleToggleSound}
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: '#141d2e',
+              border: '1px solid #24324c',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -199,7 +200,7 @@ export default function Navbar({
             }}
             title={isMuted ? "Ovozni yoqish" : "Ovozni o'chirish"}
           >
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            {isMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
           </button>
 
           {/* User Status / Profile Button */}
@@ -211,33 +212,32 @@ export default function Navbar({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '6px 12px 6px 8px',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'border-color 0.2s ease'
+              gap: '8px',
+              background: '#141d2e',
+              border: '1px solid #24324c',
+              padding: '5px 12px 5px 6px',
+              borderRadius: '10px',
+              cursor: 'pointer'
             }}
           >
             <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              background: '#1e293b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '18px'
+              fontSize: '16px'
             }}>
               {currentUser.avatar || '⚡'}
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc', lineHeight: 1.2 }}>
                 {currentUser.name}
               </div>
-              <div style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '600' }}>
-                🪙 {currentUser.coins ?? 450} • {currentUser.xp ?? 2850} XP
+              <div style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '700' }}>
+                🪙 {currentUser.coins ?? 450} Tanga
               </div>
             </div>
           </div>

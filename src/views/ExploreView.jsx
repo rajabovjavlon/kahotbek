@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Sparkles, Gamepad2, Play, Users, BookOpen, Star, SlidersHorizontal } from 'lucide-react';
+import { Search, Gamepad2, SlidersHorizontal } from 'lucide-react';
 import QuizCard from '../components/QuizCard';
 import { CATEGORIES } from '../data/defaultQuizzes';
 import { soundManager } from '../utils/sounds';
@@ -8,7 +8,7 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Barchasi');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('popular'); // 'popular', 'newest', 'rating'
+  const [sortBy, setSortBy] = useState('popular');
 
   // Filtering
   const filtered = quizzes.filter(q => {
@@ -30,61 +30,63 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 20px 60px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '30px' }}>
+      <div style={{ marginBottom: '26px' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          marginBottom: '8px'
+          marginBottom: '6px'
         }}>
           <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            background: '#0284c7',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff'
           }}>
-            <Gamepad2 size={20} />
+            <Gamepad2 size={18} />
           </div>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#fff' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#ffffff' }}>
             Barcha O'yinlar & Viktorinalar
           </h1>
         </div>
-        <p style={{ fontSize: '15px', color: '#94a3b8' }}>
+        <p style={{ fontSize: '14px', color: '#94a3b8' }}>
           O'zingizga yoqqan yo'nalishni tanlang va xoh yakkaxon (Solo), xoh jonli do'stlaringiz bilan o'ynang!
         </p>
       </div>
 
       {/* Control Bar: Search & Filters */}
-      <div className="glass-panel" style={{
-        padding: '20px',
-        borderRadius: '20px',
-        marginBottom: '28px',
+      <div style={{
+        background: '#121826',
+        border: '1px solid #1e283d',
+        padding: '18px',
+        borderRadius: '16px',
+        marginBottom: '26px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '14px'
       }}>
         <div style={{
           display: 'flex',
-          gap: '16px',
+          gap: '14px',
           alignItems: 'center',
           flexWrap: 'wrap'
         }}>
           {/* Search Input */}
           <div style={{
-            flex: '1 1 300px',
+            flex: '1 1 280px',
             display: 'flex',
             alignItems: 'center',
-            background: '#090c15',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '14px',
-            padding: '10px 16px',
+            background: '#0e1422',
+            border: '1px solid #222d42',
+            borderRadius: '12px',
+            padding: '8px 14px',
             gap: '10px'
           }}>
-            <Search size={18} color="#94a3b8" />
+            <Search size={16} color="#94a3b8" />
             <input
               type="text"
               placeholder="O'yin nomi, mavzu yoki muallif bo'yicha qidiruv..."
@@ -94,14 +96,14 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: '#fff',
-                fontSize: '14px'
+                color: '#ffffff',
+                fontSize: '13px'
               }}
             />
           </div>
 
           {/* Difficulty Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>Qiyinlik:</span>
             {['All', 'Oson', "O'rta", 'Qiyin', 'Pro'].map((diff) => (
               <button
@@ -112,12 +114,12 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
                 }}
                 style={{
                   padding: '6px 12px',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   fontSize: '12px',
                   fontWeight: '700',
-                  background: difficultyFilter === diff ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  border: difficultyFilter === diff ? '1px solid #06b6d4' : '1px solid rgba(255, 255, 255, 0.08)',
-                  color: difficultyFilter === diff ? '#38bdf8' : '#94a3b8'
+                  background: difficultyFilter === diff ? '#4f46e5' : '#0e1422',
+                  border: difficultyFilter === diff ? '1px solid #4f46e5' : '1px solid #222d42',
+                  color: difficultyFilter === diff ? '#ffffff' : '#94a3b8'
                 }}
               >
                 {diff === 'All' ? 'Barchasi' : diff}
@@ -127,16 +129,16 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
 
           {/* Sorting */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-            <SlidersHorizontal size={16} color="#94a3b8" />
+            <SlidersHorizontal size={15} color="#94a3b8" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               style={{
-                background: '#090c15',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '10px',
+                background: '#0e1422',
+                border: '1px solid #222d42',
+                borderRadius: '8px',
                 padding: '6px 12px',
-                color: '#fff',
+                color: '#ffffff',
                 fontSize: '13px'
               }}
             >
@@ -151,7 +153,7 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
           display: 'flex',
           gap: '8px',
           overflowX: 'auto',
-          paddingBottom: '4px'
+          paddingBottom: '2px'
         }}>
           {CATEGORIES.map((cat) => {
             const isSel = activeCategory === cat;
@@ -163,14 +165,14 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
                   setActiveCategory(cat);
                 }}
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: '10px',
-                  fontSize: '13px',
-                  fontWeight: '600',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: '700',
                   whiteSpace: 'nowrap',
-                  background: isSel ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255, 255, 255, 0.04)',
-                  border: isSel ? '1px solid rgba(139, 92, 246, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  color: isSel ? '#fff' : '#cbd5e1'
+                  background: isSel ? '#4f46e5' : '#0e1422',
+                  border: isSel ? '1px solid #4f46e5' : '1px solid #222d42',
+                  color: isSel ? '#ffffff' : '#94a3b8'
                 }}
               >
                 {cat}
@@ -182,20 +184,26 @@ export default function ExploreView({ quizzes, onPlaySolo, onHostLobby }) {
 
       {/* Grid of Results */}
       {filtered.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center', borderRadius: '24px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎯</div>
-          <h2 style={{ fontSize: '20px', color: '#fff', marginBottom: '6px' }}>
+        <div style={{
+          background: '#121826',
+          border: '1px solid #1e283d',
+          padding: '50px 20px',
+          textAlign: 'center',
+          borderRadius: '16px'
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🎯</div>
+          <h2 style={{ fontSize: '18px', color: '#ffffff', marginBottom: '4px' }}>
             Mos keluvchi quizlar topilmadi
           </h2>
-          <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+          <p style={{ fontSize: '13px', color: '#94a3b8' }}>
             Qidiruv so'zini o'zgartiring yoki filtrlarni tozalang
           </p>
         </div>
       ) : (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '24px'
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '20px'
         }}>
           {filtered.map((quiz) => (
             <QuizCard

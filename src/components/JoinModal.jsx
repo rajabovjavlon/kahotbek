@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Play, Hash, User, Sparkles, ShieldCheck } from 'lucide-react';
+import { X, Play, Hash, User, ShieldCheck } from 'lucide-react';
 import { ANIMAL_AVATARS } from '../data/animals';
 import { soundManager } from '../utils/sounds';
 
@@ -55,22 +55,22 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
       position: 'fixed',
       inset: 0,
       zIndex: 1000,
-      backgroundColor: 'rgba(5, 7, 15, 0.88)',
-      backdropFilter: 'blur(14px)',
+      backgroundColor: 'rgba(5, 8, 16, 0.85)',
+      backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px'
     }}>
-      <div className="glass-panel anim-pop" style={{
+      <div className="clean-panel anim-pop" style={{
         width: '100%',
-        maxWidth: '480px',
-        background: '#111625',
-        border: '1px solid rgba(139, 92, 246, 0.35)',
-        borderRadius: '24px',
+        maxWidth: '460px',
+        background: '#121826',
+        border: '1px solid #222d42',
+        borderRadius: '20px',
         padding: '28px',
         position: 'relative',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 45px rgba(139, 92, 246, 0.25)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
         maxHeight: '92vh',
         overflowY: 'auto'
       }}>
@@ -84,14 +84,15 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
             position: 'absolute',
             top: '20px',
             right: '20px',
-            width: '36px',
-            height: '36px',
+            width: '34px',
+            height: '34px',
             borderRadius: '10px',
-            background: 'rgba(255, 255, 255, 0.08)',
+            background: '#1c273c',
             color: '#94a3b8',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            border: '1px solid #283652'
           }}
         >
           <X size={18} />
@@ -103,17 +104,17 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '56px',
-            height: '56px',
-            borderRadius: '18px',
-            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-            fontSize: '28px',
-            marginBottom: '10px',
-            boxShadow: '0 0 25px rgba(6, 182, 212, 0.5)'
+            width: '50px',
+            height: '50px',
+            borderRadius: '14px',
+            background: '#0284c7',
+            color: '#fff',
+            fontSize: '24px',
+            marginBottom: '10px'
           }}>
             🎮
           </div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#fff' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#ffffff' }}>
             Jonli Xonaga Ulanish
           </h2>
           <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>
@@ -123,8 +124,8 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
 
         {error && (
           <div style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
             color: '#fca5a5',
             padding: '10px 14px',
             borderRadius: '12px',
@@ -139,19 +140,19 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
         <form onSubmit={handleSubmit}>
           {/* PIN Input display */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
               O'yin PIN Kodi
             </label>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              background: '#090c15',
-              border: '2px solid rgba(6, 182, 212, 0.4)',
-              borderRadius: '14px',
+              background: '#0e1422',
+              border: '2px solid #222d42',
+              borderRadius: '12px',
               padding: '8px 14px',
               gap: '10px'
             }}>
-              <Hash size={20} color="#06b6d4" />
+              <Hash size={18} color="#0284c7" />
               <input
                 type="text"
                 placeholder="PIN (Masalan: 742819)"
@@ -165,7 +166,7 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
                   width: '100%',
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: '#ffffff',
                   fontSize: '20px',
                   fontWeight: '800',
                   letterSpacing: '3px',
@@ -189,10 +190,10 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
                 onClick={() => handleKeypadPress(n.toString())}
                 style={{
                   padding: '8px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '10px',
-                  fontSize: '17px',
+                  background: '#0e1422',
+                  border: '1px solid #222d42',
+                  borderRadius: '9px',
+                  fontSize: '16px',
                   fontWeight: '700',
                   color: '#f8fafc'
                 }}
@@ -205,9 +206,9 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
               onClick={handleClear}
               style={{
                 padding: '8px',
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '9px',
                 fontSize: '12px',
                 fontWeight: '700',
                 color: '#fca5a5'
@@ -220,10 +221,10 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
               onClick={() => handleKeypadPress('0')}
               style={{
                 padding: '8px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '10px',
-                fontSize: '17px',
+                background: '#0e1422',
+                border: '1px solid #222d42',
+                borderRadius: '9px',
+                fontSize: '16px',
                 fontWeight: '700',
                 color: '#f8fafc'
               }}
@@ -235,9 +236,9 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
               onClick={handleBackspace}
               style={{
                 padding: '8px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
+                background: '#1c273c',
+                border: '1px solid #283652',
+                borderRadius: '9px',
                 fontSize: '14px',
                 fontWeight: '700',
                 color: '#cbd5e1'
@@ -249,15 +250,15 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
 
           {/* Nickname input */}
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
               Ismingiz (Username)
             </label>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              background: '#090c15',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
+              background: '#0e1422',
+              border: '1px solid #222d42',
+              borderRadius: '10px',
               padding: '8px 12px',
               gap: '10px'
             }}>
@@ -275,7 +276,7 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
                   width: '100%',
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: '#ffffff',
                   fontSize: '14px',
                   fontWeight: '600'
                 }}
@@ -285,14 +286,14 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
 
           {/* Animal Avatar selector */}
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '8px' }}>
               Hayvon Avatari Tanlang
             </label>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '6px',
-              maxHeight: '140px',
+              maxHeight: '130px',
               overflowY: 'auto'
             }}>
               {ANIMAL_AVATARS.map((an) => {
@@ -307,17 +308,17 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
                     }}
                     style={{
                       padding: '6px',
-                      borderRadius: '10px',
-                      background: isSel ? 'rgba(139, 92, 246, 0.35)' : 'rgba(255, 255, 255, 0.04)',
-                      border: isSel ? '2px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '9px',
+                      background: isSel ? '#1e2842' : '#0e1422',
+                      border: isSel ? '2px solid #4f46e5' : '1px solid #222d42',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '4px'
                     }}
                   >
-                    <span style={{ fontSize: '20px' }}>{an.emoji}</span>
-                    <span style={{ fontSize: '11px', color: isSel ? '#c084fc' : '#94a3b8', fontWeight: '700' }}>
+                    <span style={{ fontSize: '18px' }}>{an.emoji}</span>
+                    <span style={{ fontSize: '11px', color: isSel ? '#818cf8' : '#94a3b8', fontWeight: '700' }}>
                       {an.name}
                     </span>
                   </button>
@@ -329,16 +330,16 @@ export default function JoinModal({ isOpen, onClose, onJoinGame }) {
           {/* Submit button */}
           <button
             type="submit"
-            className="btn-neon-primary"
+            className="btn-solid-primary"
             style={{
               width: '100%',
               padding: '12px',
               fontSize: '15px',
-              borderRadius: '14px'
+              borderRadius: '12px'
             }}
           >
             <Play size={16} fill="#fff" />
-            <span>Xonaga Qo'shilish (Real-Time)</span>
+            <span>Xonaga Ulanish</span>
           </button>
         </form>
       </div>

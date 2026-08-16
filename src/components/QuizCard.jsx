@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Users, Clock, Award, Star, BookOpen, Layers } from 'lucide-react';
+import { Play, Users, BookOpen, Star } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 
 export default function QuizCard({ 
@@ -11,31 +11,34 @@ export default function QuizCard({
   const getDifficultyColor = (diff) => {
     switch (diff) {
       case 'Oson': return '#10b981';
-      case "O'rta": return '#3b82f6';
+      case "O'rta": return '#0284c7';
       case 'Qiyin': return '#f59e0b';
       case 'Pro': return '#ef4444';
-      default: return '#8b5cf6';
+      default: return '#4f46e5';
     }
   };
 
   return (
     <div 
-      className="glass-card" 
+      className="clean-card" 
       style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
         position: 'relative',
-        background: '#111625'
+        background: '#121826',
+        border: '1px solid #1e283d',
+        borderRadius: '16px'
       }}
     >
-      {/* Card Header / Cover Gradient */}
+      {/* Card Top Banner (Solid dark container) */}
       <div style={{
-        height: '130px',
-        background: quiz.coverGradient || 'linear-gradient(135deg, #1e1b4b, #312e81)',
+        height: '110px',
+        background: '#182234',
+        borderBottom: '1px solid #222d42',
         position: 'relative',
-        padding: '16px',
+        padding: '14px 16px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between'
@@ -45,10 +48,9 @@ export default function QuizCard({
           <span 
             className="badge" 
             style={{
-              background: 'rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(8px)',
-              color: quiz.categoryColor || '#38bdf8',
-              border: `1px solid ${quiz.categoryColor || '#38bdf8'}40`
+              background: '#0e1422',
+              color: '#38bdf8',
+              border: '1px solid #222d42'
             }}
           >
             {quiz.category}
@@ -56,7 +58,7 @@ export default function QuizCard({
           <span 
             className="badge" 
             style={{
-              background: 'rgba(0,0,0,0.5)',
+              background: '#0e1422',
               color: getDifficultyColor(quiz.difficulty),
               border: `1px solid ${getDifficultyColor(quiz.difficulty)}40`
             }}
@@ -67,22 +69,20 @@ export default function QuizCard({
 
         {/* Quiz Icon and Floating Stats */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <div style={{
-            fontSize: '34px',
-            filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.5))'
-          }}>
+          <div style={{ fontSize: '32px' }}>
             {quiz.icon || '🎯'}
           </div>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            background: 'rgba(0,0,0,0.6)',
-            padding: '4px 8px',
-            borderRadius: '8px',
+            background: '#0e1422',
+            padding: '3px 8px',
+            borderRadius: '6px',
             fontSize: '12px',
             fontWeight: '700',
-            color: '#fbbf24'
+            color: '#fbbf24',
+            border: '1px solid #222d42'
           }}>
             <Star size={13} fill="#fbbf24" />
             <span>{quiz.rating || 4.9}</span>
@@ -92,7 +92,7 @@ export default function QuizCard({
 
       {/* Card Body */}
       <div style={{
-        padding: '18px',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         flexGrow: 1,
@@ -100,11 +100,11 @@ export default function QuizCard({
       }}>
         <div>
           <h3 style={{
-            fontSize: '17px',
+            fontSize: '16px',
             fontWeight: '800',
-            color: '#f8fafc',
+            color: '#ffffff',
             lineHeight: 1.3,
-            marginBottom: '8px',
+            marginBottom: '6px',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -117,7 +117,7 @@ export default function QuizCard({
             fontSize: '13px',
             color: '#94a3b8',
             lineHeight: 1.4,
-            marginBottom: '14px',
+            marginBottom: '12px',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -133,44 +133,37 @@ export default function QuizCard({
             gap: '12px',
             fontSize: '12px',
             color: '#cbd5e1',
-            marginBottom: '16px',
+            marginBottom: '14px',
             flexWrap: 'wrap'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <BookOpen size={14} color="#8b5cf6" />
+              <BookOpen size={14} color="#818cf8" />
               <span>{quiz.questions?.length || 5} ta savol</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Users size={14} color="#06b6d4" />
+              <Users size={14} color="#38bdf8" />
               <span>{quiz.playsCount?.toLocaleString() || '1,200'} o'ynaldi</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '10px', borderTop: '1px solid #1e283d' }}>
           {/* Solo Play Button */}
           <button
             onClick={() => {
               soundManager.playClick();
               onPlaySolo(quiz);
             }}
+            className="btn-solid-green"
             style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: '#fff',
-              padding: '9px 12px',
+              padding: '8px 10px',
               borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+              fontSize: '12px'
             }}
           >
-            <Play size={14} fill="#fff" />
-            <span>Solo O'ynash</span>
+            <Play size={13} fill="#fff" />
+            <span>Solo</span>
           </button>
 
           {/* Host Live Room Button */}
@@ -179,21 +172,14 @@ export default function QuizCard({
               soundManager.playClick();
               onHostLobby(quiz);
             }}
+            className="btn-solid-primary"
             style={{
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-              color: '#fff',
-              padding: '9px 12px',
+              padding: '8px 10px',
               borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+              fontSize: '12px'
             }}
           >
-            <Users size={14} />
+            <Users size={13} />
             <span>Xona Ochish</span>
           </button>
         </div>

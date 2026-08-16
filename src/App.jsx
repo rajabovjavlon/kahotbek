@@ -353,7 +353,7 @@ export default function App() {
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>⚡</span>
+              <img src="/logo.png" alt="Kahotbek" style={{ width: '22px', height: '22px', objectFit: 'contain', borderRadius: '4px' }} />
               <span style={{ fontWeight: '800', color: '#f8fafc' }}>KAHOTBEK</span>
               <span>— O'zbekistondagi №1 Interaktiv Real-Time Viktorina & Poyga Platformasi</span>
             </div>

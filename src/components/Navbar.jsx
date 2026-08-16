@@ -72,19 +72,16 @@ export default function Navbar({
             userSelect: 'none'
           }}
         >
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: '#4f46e5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px',
-            color: '#fff'
-          }}>
-            ⚡
-          </div>
+          <img
+            src="/logo.png"
+            alt="Kahotbek"
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              objectFit: 'contain'
+            }}
+          />
           <div>
             <div style={{
               fontSize: '20px',
